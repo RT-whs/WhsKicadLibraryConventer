@@ -1,0 +1,25 @@
+# Virtuální prostředí
+venv/
+.env/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Soubory konfigurace IDE a editorů
+.vscode/
+.idea/
+*.swp
+
+# Soubory a složky pro distribuci
+dist/
+build/
+*.egg-info/
+
+# Konfigurace nástrojů
+*.log
+
+# Konfigurace pro IDE (např. pycharm, vs code)
+*.iml

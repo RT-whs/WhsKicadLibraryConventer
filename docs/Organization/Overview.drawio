@@ -1,0 +1,60 @@
+<mxfile host="Electron" modified="2024-12-31T12:35:43.434Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/23.0.2 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="ciKaT-D-3IhBEyCxonkC" version="23.0.2" type="device">
+  <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
+    <mxGraphModel dx="1418" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-2" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="KXR9hr8OzJ_dc1GXKfEw-0" target="KXR9hr8OzJ_dc1GXKfEw-1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-0" value="Download ECAD model to download folder (eg. from Mouser)" style="rounded=1;whiteSpace=wrap;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="120" y="80" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;entryPerimeter=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="KXR9hr8OzJ_dc1GXKfEw-1" target="KXR9hr8OzJ_dc1GXKfEw-5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="180" y="330" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-7" value="Store to temporary SamacSys&lt;br&gt;&amp;nbsp;library not used in Kicad" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="KXR9hr8OzJ_dc1GXKfEw-4" vertex="1" connectable="0">
+          <mxGeometry x="-0.17" y="5" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-1" value="Running Library loader automaticaly convert to Kicad format" style="rounded=1;whiteSpace=wrap;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="120" y="190" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="KXR9hr8OzJ_dc1GXKfEw-5" target="KXR9hr8OzJ_dc1GXKfEw-11" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-13" value="New Data" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="KXR9hr8OzJ_dc1GXKfEw-12" vertex="1" connectable="0">
+          <mxGeometry x="0.0333" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-5" value="SamacSys&lt;br&gt;Lib&lt;br&gt;Temp" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="150" y="360" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="KXR9hr8OzJ_dc1GXKfEw-11" target="KXR9hr8OzJ_dc1GXKfEw-14" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-11" value="Whs library conventer pop data and move to proper library&lt;br&gt;KICAD PLUGIN" style="rounded=1;whiteSpace=wrap;html=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="330" y="370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-14" value="Store to proper&amp;nbsp;&lt;br&gt;WHS_Kicad_Library&lt;br&gt;Adjust format&lt;br&gt;Add necessary property" style="whiteSpace=wrap;html=1;rounded=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="330" y="510" width="120" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-17" value="Helios&lt;br&gt;WHS" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
+          <mxGeometry x="580" y="530" width="60" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;entryPerimeter=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="KXR9hr8OzJ_dc1GXKfEw-14" target="KXR9hr8OzJ_dc1GXKfEw-17" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="KXR9hr8OzJ_dc1GXKfEw-19" value="Create&amp;nbsp;&lt;br&gt;record&lt;br&gt;for part" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="KXR9hr8OzJ_dc1GXKfEw-18" vertex="1" connectable="0">
+          <mxGeometry x="-0.0308" y="-3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
