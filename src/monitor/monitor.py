@@ -1,35 +1,78 @@
-import os
 import time
+import threading
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
+from dataextractor.dataextractor import extract_data  # Importujeme extract_data správně z modulu dataextractor
 
-class Watcher:
-    def __init__(self, directory_to_watch, callback):
-        self.directory_to_watch = directory_to_watch
-        self.callback = callback
-        self.event_handler = FileSystemEventHandler()
-        self.event_handler.on_modified = self.on_modified
+# Načteme čas poslední změny pro každý soubor
+last_modified_time = {}
+lock = threading.Lock()
 
+# Funkce pro zpracování souboru po uplynutí 5 sekund
+def process_file(file_path):
+    """Zpracuje soubor po uplynutí 5 sekund od poslední změny."""
+    print(f"Processing file: {file_path}")
+    extract_data(file_path)
+
+# Funkce pro zpracování změn souborů
+class FileChangeHandler(FileSystemEventHandler):
     def on_modified(self, event):
-        """Akce, která se vykoná, když je soubor změněn."""
+        """Tato funkce se spustí při změně souboru."""
         if event.is_directory:
-            return
-        print(f"File modified: {event.src_path}")
-        self.callback(event.src_path)  # Zavolání callbacku pro zpracování změny
+            return  # Ignorujeme změny adresářů
 
-    def start(self):
-        """Spustí sledování složky."""
-        observer = Observer()
-        observer.schedule(self.event_handler, self.directory_to_watch, recursive=True)
-        observer.start()
+        file_path = event.src_path
+        print(f"File modified: {file_path}")
+        
+        handle_file_change(file_path)
 
-        try:
-            while True:
-                time.sleep(1)  # Udržuje program běžící
-        except KeyboardInterrupt:
-            observer.stop()
-        observer.join()
+# Funkce pro zpracování změn souboru
+def handle_file_change(file_path):
+    """Zpracuje změnu souboru, pokud uplynulo 5 sekund od poslední změny."""
+    global last_modified_time
+    
+    # Získáme aktuální čas změny
+    current_time = time.time()
 
-def start_monitoring(directory_to_watch, callback):
-    watcher = Watcher(directory_to_watch, callback)
-    watcher.start()
+    with lock:
+        # Pokud uplynulo méně než 5 sekund od poslední změny, neprovádíme akce
+        if file_path in last_modified_time:
+            time_diff = current_time - last_modified_time[file_path]
+            if time_diff < 5:
+                print(f"Waiting for 5 seconds before processing {file_path}")
+                last_modified_time[file_path] = current_time
+                return  # Nezpracováváme, čekáme na 5 sekund
+        # Aktualizujeme čas poslední změny
+        last_modified_time[file_path] = current_time
+
+    # Spustíme odpočet a zpracování souboru
+    threading.Thread(target=start_countdown_and_process, args=[file_path]).start()
+
+# Funkce pro odpočet a následné zpracování souboru
+def start_countdown_and_process(file_path):
+    """Provádí odpočet 5 sekund a následně zpracuje soubor."""
+    for i in range(5, 0, -1):
+        print(f"Waiting {i} seconds before processing {file_path}...", end="\r")
+        time.sleep(1)
+
+    # Po odpočtu zpracujeme soubor
+    print(f"\nProcessing file after 5 seconds: {file_path}")
+    process_file(file_path)
+
+# Funkce pro spuštění monitorování změn v adresáři
+def start_monitoring(watched_folder):
+    """Spustí sledování změn v adresáři pomocí watchdog."""
+    print(f"Monitoring changes in {watched_folder}...")
+    
+    # Vytvoření obsluhy událostí pro sledování změn souborů
+    event_handler = FileChangeHandler()
+    observer = Observer()
+    observer.schedule(event_handler, path=watched_folder, recursive=True)
+    observer.start()
+
+    try:
+        while True:
+            time.sleep(1)  # Udržuje program aktivní pro monitorování
+    except KeyboardInterrupt:
+        observer.stop()  # Pokud uživatel přeruší program, zastavíme observer
+    observer.join()
