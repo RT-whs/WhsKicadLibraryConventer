@@ -1,6 +1,51 @@
 {
-    "watched_folder": "C:\\WHS_Kicad_Libraries"
-    "symbol_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\\8.0\\sym-lib-table"
-    "footprint_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\\8.0\\fp-lib-table"
+    "watched_folder": "C:\\WHS_Kicad_Temp",
+    "library_final_folder": "C:\\WHS_Kicad_Libraries",
+    "symbol_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\8.0\\sym-lib-table",
+    "footprint_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\8.0\\fp-lib-table",
+
+    "sym_property_mandatory": [
+        {
+            "name": "ERP",
+            "format_value": "^[0-9]{3}/[0-9]{6}$",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 0 0 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n    )\n)"
+        },
+        {
+            "name": "link",
+            "format_value": "^.*$",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
+        },
+        {
+            "name": "Title1_czech",
+            "format_value": "^.*$",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
+        },
+        {
+            "name": "Title2_english",
+            "format_value": "^.*$",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
+        },
+        {
+            "name": "Title3_Type",
+            "format_value": "^.*$",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
+        },
+        {
+            "name": "Title4_OrderNr",
+            "format_value": "^.*$",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
+        }
+        ,
+        {
+            "name": "Supplier_Name",
+            "format_value": "^.*$",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
+        },
+        {
+            "name": "Manufacturer_Name",
+            "format_value": "^.*$",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -694.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (justify left top)\n        (hide yes)\n    )\n)"        
+        }
+    ]
 }
   

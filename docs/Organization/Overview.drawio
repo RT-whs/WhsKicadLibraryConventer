@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2024-12-31T16:08:14.468Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/23.0.2 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="ggry0CW0Cc9-P3bch9zW" version="23.0.2" type="device">
+<mxfile host="Electron" modified="2025-01-02T16:59:20.328Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/23.0.2 Chrome/120.0.6099.109 Electron/28.1.0 Safari/537.36" etag="SL-v3iBGuFOceDR6L3qi" version="23.0.2" type="device">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="2245" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2320" dy="863" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
@@ -69,7 +69,7 @@
             <mxPoint as="offset" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="zYj12NF0BxfvcBbkH3LF-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="WIyWlLk6GJQsqaUBKTNV-1" source="zYj12NF0BxfvcBbkH3LF-0" target="KXR9hr8OzJ_dc1GXKfEw-11">
+        <mxCell id="zYj12NF0BxfvcBbkH3LF-2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="zYj12NF0BxfvcBbkH3LF-0" target="KXR9hr8OzJ_dc1GXKfEw-11" edge="1">
           <mxGeometry relative="1" as="geometry">
             <Array as="points">
               <mxPoint x="310" y="305" />
@@ -77,14 +77,26 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="zYj12NF0BxfvcBbkH3LF-0" value="New data process&lt;br&gt;&lt;br&gt;&lt;ul&gt;&lt;li&gt;Take data from&amp;nbsp;SamacSys_Parts.kicad_sym and show them.&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;&quot;&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;Fill necessary data Type, OrderNr, Link, Description czech &lt;/span&gt;&lt;/span&gt;english, keywords, ERP&amp;nbsp;&lt;/li&gt;&lt;li&gt;Select Category /passive/resistor/smd (If missing add folders with base files and adjust&lt;span style=&quot;background-color: rgb(199, 255, 208);&quot;&gt; Library database&lt;/span&gt;)&amp;nbsp;&lt;/li&gt;&lt;li&gt;copy&amp;nbsp;&lt;span style=&quot;background-color: initial;&quot;&gt;&amp;nbsp;*&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;.kicad_mod to proper folder for footprint to libraryName.pretty folder&lt;/span&gt;&lt;/li&gt;&lt;li&gt;copy *.stp to 3dshapes folder&amp;nbsp;&lt;/li&gt;&lt;li&gt;adjust kicad_mod to proper 3dshape&lt;/li&gt;&lt;li&gt;Put filled data to proper kicad_sym, and adjust location of footprint. (can select other footprint)&lt;/li&gt;&lt;/ul&gt;&amp;nbsp;&lt;br&gt;" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;labelPosition=center;verticalLabelPosition=middle;align=left;verticalAlign=top;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="zYj12NF0BxfvcBbkH3LF-0" value="New data process&lt;br&gt;&lt;br&gt;&lt;ul&gt;&lt;li&gt;Take data from&amp;nbsp;SamacSys_Parts.kicad_sym and show them.&lt;/li&gt;&lt;li&gt;&lt;span style=&quot;&quot;&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;Fill necessary data Type, OrderNr, Link, Description czech &lt;/span&gt;&lt;/span&gt;english, keywords, ERP&amp;nbsp;&lt;/li&gt;&lt;li&gt;Select Category /passive/resistor/smd (If missing add folders with base files and adjust&lt;span style=&quot;background-color: rgb(199, 255, 208);&quot;&gt; Library database&lt;/span&gt;)&amp;nbsp;&lt;/li&gt;&lt;li&gt;copy&amp;nbsp;&lt;span style=&quot;background-color: initial;&quot;&gt;&amp;nbsp;*&lt;/span&gt;&lt;span style=&quot;background-color: initial;&quot;&gt;.kicad_mod to proper folder for footprint to libraryName.pretty folder&lt;/span&gt;&lt;/li&gt;&lt;li&gt;copy *.stp to 3dshapes folder&amp;nbsp;&lt;/li&gt;&lt;li&gt;adjust kicad_mod to proper 3dshape&lt;/li&gt;&lt;li&gt;Put filled data to proper kicad_sym, and adjust location of footprint. (can select other footprint)&lt;/li&gt;&lt;/ul&gt;&amp;nbsp;&lt;br&gt;" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;labelPosition=center;verticalLabelPosition=middle;align=left;verticalAlign=top;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="510" y="180" width="540" height="250" as="geometry" />
         </mxCell>
-        <mxCell id="zYj12NF0BxfvcBbkH3LF-3" value="Lib db&lt;br&gt;symbols&lt;br&gt;&lt;br&gt;sym-lib-table" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;labelBorderColor=none;labelBackgroundColor=#C7FFD0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="zYj12NF0BxfvcBbkH3LF-3" value="Lib db&lt;br&gt;symbols&lt;br&gt;&lt;br&gt;sym-lib-table" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;labelBorderColor=none;labelBackgroundColor=#C7FFD0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="-110" y="570" width="60" height="140" as="geometry" />
         </mxCell>
-        <mxCell id="zYj12NF0BxfvcBbkH3LF-4" value="Lib db&lt;br&gt;footprints&lt;br&gt;&lt;br&gt;fb-lib-table" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;labelBackgroundColor=#C7FFD0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+        <mxCell id="zYj12NF0BxfvcBbkH3LF-4" value="Lib db&lt;br&gt;footprints&lt;br&gt;&lt;br&gt;fb-lib-table" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;labelBackgroundColor=#C7FFD0;" parent="WIyWlLk6GJQsqaUBKTNV-1" vertex="1">
           <mxGeometry x="-50" y="570" width="60" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="YthK8gGKFCXeevrIB-cx-0" value="Sync with Helios" style="labelPosition=center;verticalLabelPosition=middle;align=center;html=1;shape=mxgraph.basic.shaded_button;dx=10;fillColor=#E6E6E6;strokeColor=none;whiteSpace=wrap;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="470" y="600" width="100" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YthK8gGKFCXeevrIB-cx-3" value="Standart parts when you select package and value (resistors, capacitors etc..)&amp;nbsp;" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="330" y="760" width="300" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="YthK8gGKFCXeevrIB-cx-5" value="&lt;ul&gt;&lt;li&gt;Fill values in Kicad, select package&amp;nbsp;&lt;/li&gt;&lt;li&gt;If you need use plugin/this app to assign ERP&lt;/li&gt;&lt;/ul&gt;" style="text;strokeColor=none;fillColor=none;html=1;whiteSpace=wrap;verticalAlign=middle;overflow=hidden;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="330" y="790" width="300" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="YthK8gGKFCXeevrIB-cx-6" value="KICAD LIBRARY CONVENTER" style="text;html=1;strokeColor=#b85450;fillColor=#f8cecc;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="WIyWlLk6GJQsqaUBKTNV-1">
+          <mxGeometry x="360" y="80" width="300" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

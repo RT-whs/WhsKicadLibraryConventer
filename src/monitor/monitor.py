@@ -1,5 +1,6 @@
 import time
 import threading
+import os
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from dataextractor.dataextractor import extract_data  # Importujeme extract_data správně z modulu dataextractor
@@ -22,9 +23,13 @@ class FileChangeHandler(FileSystemEventHandler):
             return  # Ignorujeme změny adresářů
 
         file_path = event.src_path
-        print(f"File modified: {file_path}")
-        
-        handle_file_change(file_path)
+        # Získání přípony
+        extension = os.path.splitext(file_path)[1]
+        if extension == ".kicad_sym":
+            print(f"File modified: {file_path}")
+            handle_file_change(file_path)
+        else:
+            print(f"File modified: {file_path} skipped") 
 
 # Funkce pro zpracování změn souboru
 def handle_file_change(file_path):
