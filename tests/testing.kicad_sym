@@ -103,14 +103,7 @@
 				(hide yes)
 			)
 		)
-		(property "ERP" "320/000152"
-			(at 0 0 0)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
+		
 		(property "link" ""
 			(at 0 0 0)
 			(effects

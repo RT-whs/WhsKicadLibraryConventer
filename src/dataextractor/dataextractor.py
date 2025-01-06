@@ -2,6 +2,7 @@ import json
 import regex as re
 from src.dataextractor.datatypes import PropertyDictWHS
 from src.gui.gui import show_in_gui
+from src.util.json_util import load_json_config
 
 
 
@@ -28,10 +29,14 @@ def extract_data(file_path):
         for symbol in symbols: #handling symbol by symbol
             sym_properties_temp = get_matching_key(symbol, "(property ")
             property_temp_dict: PropertyDictWHS = get_dict_properties(sym_properties_temp)
+            
+            merge with sym_properties_mandatory Todo 
+            
             #Show in gui
-            show_in_gui(property_temp_dict)
+            show_in_gui(property_temp_dict, config_data.get('library_final_folder'))
             keys_list = list(property_temp_dict.keys())
             print(property_temp_dict[keys_list[0]] ['value'])
+            #merge mandatory properties with 
 
         
     
@@ -48,9 +53,7 @@ def extract_data(file_path):
 
     
 
-def load_json_config():
-    with open("config.json", "r", encoding="utf-8") as file:
-        return  json.load(file)            
+         
 
 def get_mandatory_dict_properties(config_data):
     sym_properties_dict: PropertyDictWHS = {

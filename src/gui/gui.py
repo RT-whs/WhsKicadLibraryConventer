@@ -1,7 +1,12 @@
 import tkinter as tk
-from tkinter import ttk
+import json
 
-def show_in_gui(property_dict):
+from tkinter import ttk
+from tkinter import filedialog, simpledialog
+from src.util.lib_util import load_existing_lib_patches, make_lib_base_structure,save_new_lib_to_kicad_settings
+from src.util.json_util import load_json_config
+
+def show_in_gui(property_dict, initial_library_path):
 
     def on_double_click(event):
         button_clicked = False
@@ -38,12 +43,10 @@ def show_in_gui(property_dict):
                 except tk.TclError:
                     pass  # Handle the case where the widget is already destroyed
 
-
             def on_return(event=None):
                 """Uloží hodnotu při stisknutí Enter."""
                 on_focus_out()
 
-            
             entry.bind("<FocusOut>", on_focus_out)
             entry.bind("<Return>", on_return)
 
@@ -52,11 +55,11 @@ def show_in_gui(property_dict):
                 def on_button_click():
                     nonlocal button_clicked
                     button_clicked = True
-                    print(f"Footprint button clicked! Current value: {entry.get()}")
+                    #print(f"Footprint button clicked! Current value: {entry.get()}") vrací hodnotu text boxu
                     # Zde můžete přidat vlastní logiku, např. otevření dialogu
 
 
-                # Pokud je položka footprint nebo ERP, zobraz tlačítko
+                # Pokud je položka Footprint nebo ERP, zobraz tlačítko
                 button = tk.Button(tree, text="...", command=lambda: on_button_click())
                 button.place(x=x + width - 25, y=y, width=25, height=height)
 
@@ -66,14 +69,17 @@ def show_in_gui(property_dict):
                     nonlocal button_clicked
                     try:
                         if entry.winfo_ismapped():  # Safely check if the widget is still there
-                            if (not button_clicked):
+                            widget = root.winfo_containing(event.x_root, event.y_root)  # Detekuje, na co bylo kliknuto
+                            if widget == button:  # Pokud bylo kliknuto na tlačítko, ignoruj událost
+                                return
+                            if not button_clicked:
                                 on_focus_out()  # Clean up
-                            else:                                
+                            else:
                                 button_clicked = False
                     except tk.TclError:
                         pass  # The widget might already be destroyed
 
-                root.bind("<Button-1>", on_click_outside, add="+")  # Kliknutí mimo
+                root.bind("<Button-1>", on_click_outside, add="+")
 
     def save_changes():
         """Uloží změny zpět do property_dict."""
@@ -82,7 +88,16 @@ def show_in_gui(property_dict):
             for key, prop in property_dict.items():
                 if prop["name"] == name:
                     prop["value"] = value
-
+        print("Saving..")
+        #update dictionary
+        
+        #save to kicad.sym
+        print("Saved")
+        #close this window
+        root.destroy()
+    
+    libraries_whs_kicad = load_existing_lib_patches()
+    
     root = tk.Tk()
     root.title("Editable Properties Viewer")
 
@@ -97,9 +112,12 @@ def show_in_gui(property_dict):
     tree.column("value", width=600)
 
     # Naplnění tabulky daty
-    for key, value in property_dict.items():
-        tree.insert("", tk.END, values=(value["name"], value["value"]))
+    def update_tree(): 
+        tree.delete       
+        for key, value in property_dict.items():
+            tree.insert("", tk.END, values=(value["name"], value["value"]))
 
+    update_tree()
     tree.grid(row=1, column=0, columnspan=3, padx=10, pady=20, sticky="nsew")  # Proveďte roztažení
 
     # Přidání scrollbarů
@@ -115,15 +133,52 @@ def show_in_gui(property_dict):
     tree.bind("<Double-1>", on_double_click)
 
     # Create library selector
-    library_options = ["Library 1", "Library 2", "Library 3"]
+
+   
+   
+    def on_click_CreateLib():
+        
+        library_path, library_name = select_library_path_and_name()
+        #create folders
+        make_lib_base_structure(library_path, library_name)
+        #add library to kicad definition
+        save_new_lib_to_kicad_settings(library_path, library_name)
+        #update structure
+        nonlocal libraries_whs_kicad
+        libraries_whs_kicad = load_existing_lib_patches()
+        cbDestLibname['values'] = libraries_whs_kicad
+        
+        
+
+
+        
+
+    def select_library_path_and_name():
+        root = tk.Tk()
+        root.withdraw()  # Skryje hlavní okno aplikace
+
+        # Dialog pro výběr cesty ke knihovně
+        library_path = filedialog.askdirectory(title="Select Library Path",initialdir = initial_library_path )
+        if not library_path:  # Pokud uživatel zruší dialog
+            print("Library path selection cancelled.")
+            return None, None
+
+        # Dialog pro zadání názvu knihovny
+        library_name = simpledialog.askstring("Library Name", "Enter the name of the library: whs_yyy")
+        if not library_name:  # Pokud uživatel zruší dialog nebo nezadá nic
+            print("Library name input cancelled.")
+            return None, None
+
+        return library_path, library_name
+    
 
     DestinationLibName = "Choose library"
     label1 = ttk.Label(root,text="Choose/add library")
     label1.grid(row=0,column=0,pady=5, padx=5, sticky='w')
-    cbDestLibname = ttk.Combobox(root, values=library_options, state="readonly")  # "readonly" zabraňuje přímému zápisu uživatelem
+    cbDestLibname = ttk.Combobox(root, values=libraries_whs_kicad, state="readonly", width=100)  # "readonly" zabraňuje přímému zápisu uživatelem
     cbDestLibname.grid(row=0, column=0, pady=5, padx=150, sticky='w')
     cbDestLibname.set("Select a library")  # Výchozí hodnota ComboBoxu
-    buttonSelectlibrary = tk.Button(root, text="Create new library",  command=lambda: handle_button_CreateLibrary_click(cbDestLibname))
+    buttonSelectlibrary = tk.Button(root, text="Create new library",  command=lambda: on_click_CreateLib() )
     buttonSelectlibrary.grid(row=0,column=2 ,pady=5, padx=280, sticky='w')
 
     # Přidání tlačítka pro uložení změn
@@ -145,3 +200,6 @@ def show_in_gui(property_dict):
     frame_tree.grid_columnconfigure(1, weight=0)  # Sloupec pro scrollbar y, nemusí se roztahovat
 
     root.mainloop()
+
+
+
