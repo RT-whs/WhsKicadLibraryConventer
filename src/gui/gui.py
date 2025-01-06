@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
-from src.dataextractor.datatypes import PropertyDictWHS
 
 def show_in_gui(property_dict):
 
     def on_double_click(event):
         button_clicked = False
+        button = None
+
         """Zahájí editaci hodnoty při dvojkliku."""
         selected_item = tree.selection()
         if not selected_item:
@@ -19,8 +20,6 @@ def show_in_gui(property_dict):
             value = tree.item(item_id, "values")[1]
             name = tree.item(item_id, "values")[0]
 
-            
-           
             # Standardní vstupní pole pro jiné položky
             entry = tk.Entry(tree)
             entry.place(x=x, y=y, width=width, height=height)
@@ -28,24 +27,28 @@ def show_in_gui(property_dict):
             entry.focus()
 
             def on_focus_out(event=None):
-                """Uloží hodnotu a zničí vstupní pole a tlačítko."""
-                if button_clicked:  # Pokud bylo kliknuto na tlačítko, nepokračujeme
-                    entry.focus_set()  # Znovu nastavíme fokus na vstupní pole
-                    return
-                    
-                """Uloží hodnotu a zničí vstupní pole."""
-                new_value = entry.get()
-                tree.item(item_id, values=(tree.item(item_id, "values")[0], new_value))
-                entry.destroy()
+                """Handles focus out events, ensuring entry and button are cleaned up."""
+                try:
+                    if entry.winfo_ismapped():  # Check if the entry widget is still valid
+                        new_value = entry.get()
+                        tree.item(item_id, values=(tree.item(item_id, "values")[0], new_value))
+                    entry.destroy()  # Destroy the entry widget
+                    if button:
+                        button.destroy()  # Destroy the button if it exists
+                except tk.TclError:
+                    pass  # Handle the case where the widget is already destroyed
+
 
             def on_return(event=None):
                 """Uloží hodnotu při stisknutí Enter."""
                 on_focus_out()
 
-                entry.bind("<FocusOut>", on_focus_out)
-                entry.bind("<Return>", on_return)
+            
+            entry.bind("<FocusOut>", on_focus_out)
+            entry.bind("<Return>", on_return)
 
             if name in {"Footprint", "ERP"}:
+                
                 def on_button_click():
                     nonlocal button_clicked
                     button_clicked = True
@@ -54,14 +57,23 @@ def show_in_gui(property_dict):
 
 
                 # Pokud je položka footprint nebo ERP, zobraz tlačítko
-                button = tk.Button(frame_tree, text="...", command=lambda: handle_button_click(name))
+                button = tk.Button(tree, text="...", command=lambda: on_button_click())
                 button.place(x=x + width - 25, y=y, width=25, height=height)
-                
-                def on_focus_out(event=None):
-                    """Skryje tlačítko při ztrátě fokusu."""
-                    #button.destroy()
 
-                root.bind("<Button-1>", on_focus_out, add="+")
+                # Skrytí tlačítka při ztrátě fokusu (kliknutí mimo)
+                def on_click_outside(event):
+                    """Handles clicks outside the entry widget."""
+                    nonlocal button_clicked
+                    try:
+                        if entry.winfo_ismapped():  # Safely check if the widget is still there
+                            if (not button_clicked):
+                                on_focus_out()  # Clean up
+                            else:                                
+                                button_clicked = False
+                    except tk.TclError:
+                        pass  # The widget might already be destroyed
+
+                root.bind("<Button-1>", on_click_outside, add="+")  # Kliknutí mimo
 
     def save_changes():
         """Uloží změny zpět do property_dict."""
@@ -90,34 +102,29 @@ def show_in_gui(property_dict):
 
     tree.grid(row=1, column=0, columnspan=3, padx=10, pady=20, sticky="nsew")  # Proveďte roztažení
 
-
-
     # Přidání scrollbarů
-     # Přidání vertikálního scrollbaru
     scrollbar_y = ttk.Scrollbar(frame_tree, orient="vertical", command=tree.yview)
     tree.configure(yscrollcommand=scrollbar_y.set)
     scrollbar_y.grid(row=1, column=3, sticky='ns')  # Vertikální scrollbar napravo
 
-    # Přidání horizontálního scrollbaru
     scrollbar_x = ttk.Scrollbar(frame_tree, orient="horizontal", command=tree.xview)
     tree.configure(xscrollcommand=scrollbar_x.set)
     scrollbar_x.grid(row=2, column=0, columnspan=3, sticky='ew')  # Horizontální scrollbar pod tree view
 
-
     # Událost dvojkliku
     tree.bind("<Double-1>", on_double_click)
 
-    
+    # Create library selector
+    library_options = ["Library 1", "Library 2", "Library 3"]
 
-    #Create library selector
     DestinationLibName = "Choose library"
     label1 = ttk.Label(root,text="Choose/add library")
     label1.grid(row=0,column=0,pady=5, padx=5, sticky='w')
-    entryDestLibname = tk.Entry(root)
-    entryDestLibname.grid(row=0,column=0,pady=5, padx=150, sticky='w')
-    buttonSelectlibrary = tk.Button(root, text="Select existing",  command=lambda: handle_button_selectLibrary_click(entryDestLibname.get()))
-    buttonSelectlibrary.grid(row=0,column=0 ,pady=5, padx=280, sticky='w')
-
+    cbDestLibname = ttk.Combobox(root, values=library_options, state="readonly")  # "readonly" zabraňuje přímému zápisu uživatelem
+    cbDestLibname.grid(row=0, column=0, pady=5, padx=150, sticky='w')
+    cbDestLibname.set("Select a library")  # Výchozí hodnota ComboBoxu
+    buttonSelectlibrary = tk.Button(root, text="Create new library",  command=lambda: handle_button_CreateLibrary_click(cbDestLibname))
+    buttonSelectlibrary.grid(row=0,column=2 ,pady=5, padx=280, sticky='w')
 
     # Přidání tlačítka pro uložení změn
     save_button = tk.Button(root, text="Save Changes", command=save_changes)
@@ -129,12 +136,10 @@ def show_in_gui(property_dict):
     root.grid_columnconfigure(2, weight=1)
     root.grid_columnconfigure(3, weight=0)  # Sloupec pro scrollbar y, nemusí se roztahovat
 
-    # Zajištění, že řádky se roztáhnou, pokud je to potřeba
     root.grid_rowconfigure(1, weight=1)  # Prostor pro Treeview se roztáhne
     root.grid_rowconfigure(2, weight=0)  # Horizontální scrollbar by neměl zabírat moc místa
     root.grid_rowconfigure(3, weight=0)  # Pro tlačítko uložení
 
-    # Aby se frame_tree roztáhl, nastavíme váhu pro tento rámec a pro řádky
     frame_tree.grid_rowconfigure(0, weight=1)  # Aby se Treeview roztáhlo
     frame_tree.grid_columnconfigure(0, weight=1)  # Aby se Treeview roztáhlo na šířku
     frame_tree.grid_columnconfigure(1, weight=0)  # Sloupec pro scrollbar y, nemusí se roztahovat

@@ -1,4 +1,6 @@
 #test/testdataextractor.py
+
+
 import unittest
 import regex as re
 from typing import TypedDict
@@ -6,9 +8,10 @@ from typing import TypedDict
 
 
 #should use absolute linking so needed to set the env var by this: 
-#$env:PYTHONPATH="F:\WHS\Projects\Company\WhsKicadLibraryConventer"
+#$env:PYTHONPATH="F:\WHS\Projects\Company\WhsKicadLibraryConverter"
 from src.dataextractor.dataextractor import get_matching_key, load_json_config, get_mandatory_dict_properties , get_dict_properties
 from src.dataextractor.datatypes import PropertyDictWHS
+from src.gui.gui import show_in_gui
 
 class TestDataExtractor(unittest.TestCase):
     
@@ -37,6 +40,7 @@ class TestDataExtractor(unittest.TestCase):
         #for symbol in matches:
         property_temp_matches = get_matching_key(matches[0], "(property ")
         property_temp_dict: PropertyDictWHS = get_dict_properties(property_temp_matches)
+        show_in_gui(property_temp_dict)
         self.assertEqual( "ERP", property_mandatory.get('ERP', {}).get('name') )
         
         keys_list = list(property_temp_dict.keys())
