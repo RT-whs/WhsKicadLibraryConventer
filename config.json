@@ -7,42 +7,50 @@
     "sym_property_mandatory": [
         {
             "name": "ERP",
+            "value": "320/000000",
             "format_value": "^[0-9]{3}/[0-9]{6}$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 0 0 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n    )\n)"
         },
         {
             "name": "link",
+            "value": "https://web.com",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
         },
         {
-            "name": "Title1_czech",
+            "name": "ERPTitle1_czech",
+            "value": "Popis produktu česky",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
         },
         {
-            "name": "Title2_english",
+            "name": "ERPTitle2_english",
+            "value": "Product description english",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
         },
         {
-            "name": "Title3_Type",
+            "name": "ERPTitle3_Type",
+            "value": "Type number",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
         },
         {
-            "name": "Title4_OrderNr",
+            "name": "ERPTitle4_OrderNr",
+            "value": "Order number",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
         }
         ,
         {
-            "name": "Supplier_Name",
+            "name": "ERPSupplier_Name",
+            "value": "Erp suplier name",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
         },
         {
-            "name": "Manufacturer_Name",
+            "name": "ERPManufacturer_Name",
+            "value": "Erp producer name",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -694.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (justify left top)\n        (hide yes)\n    )\n)"        
         }

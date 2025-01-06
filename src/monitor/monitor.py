@@ -3,7 +3,7 @@ import threading
 import os
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-from dataextractor.dataextractor import extract_data  # Importujeme extract_data správně z modulu dataextractor
+from src.dataextractor.dataextractor import extract_data  # Importujeme extract_data správně z modulu dataextractor
 
 # Načteme čas poslední změny pro každý soubor
 last_modified_time = {}
@@ -55,13 +55,13 @@ def handle_file_change(file_path):
 
 # Funkce pro odpočet a následné zpracování souboru
 def start_countdown_and_process(file_path):
-    """Provádí odpočet 5 sekund a následně zpracuje soubor."""
-    for i in range(5, 0, -1):
+    """Provádí odpočet 2 sekund a následně zpracuje soubor."""
+    for i in range(2, 0, -1):
         print(f"Waiting {i} seconds before processing {file_path}...", end="\r")
         time.sleep(1)
 
     # Po odpočtu zpracujeme soubor
-    print(f"\nProcessing file after 5 seconds: {file_path}")
+    print(f"\nProcessing file after 2 seconds: {file_path}")
     process_file(file_path)
 
 # Funkce pro spuštění monitorování změn v adresáři
