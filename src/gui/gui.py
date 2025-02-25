@@ -1,12 +1,12 @@
 import tkinter as tk
-import json
-
 from tkinter import ttk
 from tkinter import filedialog, simpledialog
 from src.util.lib_util import load_existing_lib_patches, make_lib_base_structure,save_new_lib_to_kicad_settings
-from src.util.json_util import load_json_config
+from src.util.json_util import ConfigSingleton
+from src.objects.symbol import kicad_symbol
+from blinker import Signal
 
-def show_in_gui(property_dict, initial_library_path):
+def show_in_gui(symbol_object: kicad_symbol):
 
     def on_double_click(event):
         button_clicked = False
@@ -83,15 +83,20 @@ def show_in_gui(property_dict, initial_library_path):
 
     def save_changes():
         """Uloží změny zpět do property_dict."""
+        #update dictionary
         for item_id in tree.get_children():
             name, value = tree.item(item_id, "values")
-            for key, prop in property_dict.items():
+            for key, prop in symbol_object.propertiesFinal.items():
                 if prop["name"] == name:
                     prop["value"] = value
-        print("Saving..")
-        #update dictionary
+        
+        #check if library selected
+        if cbDestLibname.getvar('InternalSelected') == 'false':
+            print ("Selected destination symbol library!")
+            return
         
         #save to kicad.sym
+        buttonSignal_SaveSymbol.send("ButtonSaveSymbol", action="clicked")
         print("Saved")
         #close this window
         root.destroy()
@@ -102,10 +107,10 @@ def show_in_gui(property_dict, initial_library_path):
     root.title("Editable Properties Viewer")
 
     frame_tree = ttk.Frame(root)
-    frame_tree.grid(row=1, column=0, columnspan=3, padx=10, pady=20, sticky="nsew") 
+    frame_tree.grid(row=1, column=0, columnspan=3, padx=10, pady=0, sticky="nsew") 
 
     # Vytvoření stromového widgetu (Treeview) jako tabulky
-    tree = ttk.Treeview(frame_tree, columns=("name", "value"), show="headings", height=15)
+    tree = ttk.Treeview(frame_tree, columns=("name", "value"), show="headings", height=25)
     tree.heading("name", text="Name")
     tree.heading("value", text="Value")
     tree.column("name", width=200)
@@ -114,7 +119,7 @@ def show_in_gui(property_dict, initial_library_path):
     # Naplnění tabulky daty
     def update_tree(): 
         tree.delete       
-        for key, value in property_dict.items():
+        for key, value in symbol_object.propertiesFinal.items():
             tree.insert("", tk.END, values=(value["name"], value["value"]))
 
     update_tree()
@@ -171,17 +176,27 @@ def show_in_gui(property_dict, initial_library_path):
 
         return library_path, library_name
     
+    
+    def on_combobox_select(event):   
+        cbDestLibname.setvar('InternalSelected','true')             
+        symbol_object.set_destination_library(cbDestLibname.get())
 
-    DestinationLibName = "Choose library"
     label1 = ttk.Label(root,text="Choose/add library")
     label1.grid(row=0,column=0,pady=5, padx=5, sticky='w')
     cbDestLibname = ttk.Combobox(root, values=libraries_whs_kicad, state="readonly", width=100)  # "readonly" zabraňuje přímému zápisu uživatelem
     cbDestLibname.grid(row=0, column=0, pady=5, padx=150, sticky='w')
     cbDestLibname.set("Select a library")  # Výchozí hodnota ComboBoxu
-    buttonSelectlibrary = tk.Button(root, text="Create new library",  command=lambda: on_click_CreateLib() )
-    buttonSelectlibrary.grid(row=0,column=2 ,pady=5, padx=280, sticky='w')
+    cbDestLibname.setvar('InternalSelected','false')
+    cbDestLibname.bind("<<ComboboxSelected>>", on_combobox_select)
+    
+    
+
+    buttonSelectlibrary = tk.Button(root, text="Create new library",  command=lambda: on_click_CreateLib(), width=20 )
+    buttonSelectlibrary.grid(row=0,column=2 ,pady=5, padx=100, sticky='w')
 
     # Přidání tlačítka pro uložení změn
+    buttonSignal_SaveSymbol = Signal()
+    symbol_object.registerEventReceiverSaveCmd(buttonSignal_SaveSymbol)
     save_button = tk.Button(root, text="Save Changes", command=save_changes)
     save_button.grid(row=2,column=1,pady=10)
 
@@ -195,7 +210,7 @@ def show_in_gui(property_dict, initial_library_path):
     root.grid_rowconfigure(2, weight=0)  # Horizontální scrollbar by neměl zabírat moc místa
     root.grid_rowconfigure(3, weight=0)  # Pro tlačítko uložení
 
-    frame_tree.grid_rowconfigure(0, weight=1)  # Aby se Treeview roztáhlo
+    frame_tree.grid_rowconfigure(0, weight=0)  # Aby se Treeview roztáhlo
     frame_tree.grid_columnconfigure(0, weight=1)  # Aby se Treeview roztáhlo na šířku
     frame_tree.grid_columnconfigure(1, weight=0)  # Sloupec pro scrollbar y, nemusí se roztahovat
 

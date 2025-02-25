@@ -1,10 +1,10 @@
-from src.util.json_util import load_json_config
+from src.util.json_util import ConfigSingleton
 import os
 
 def load_existing_lib_patches():
-    config = load_json_config()
+    config = ConfigSingleton()
     #get library
-    whs_lib_path = config.get("library_final_folder", "")  # return value from json
+    whs_lib_path = config.get('library_final_folder')  # return value from json
 
     kicad_files = []
 
@@ -37,7 +37,7 @@ def make_lib_base_structure(path,lib_name):
         pass  # no operation leave empty file
 
 def save_new_lib_to_kicad_settings(library_path, library_name):
-    config = load_json_config()
+    config = ConfigSingleton()
     library_desc_file = config.get('symbol_lib_file')
     with open(library_desc_file, "r", encoding="utf-8") as file:
         sym_lib_table = file.read() 

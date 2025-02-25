@@ -1,31 +1,37 @@
-import json
 import sys
 import os
 
-# Přidáme kořenovou složku projektu do sys.path
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.abspath(os.path.join(current_dir, ".."))
-if project_root not in sys.path:
-    sys.path.append(project_root)
 
-from monitor.monitor import start_monitoring  
-# Importujeme start_monitoring z modulu monitor
+# Nastavení cesty k projektovému kořenu
+def add_project_root_to_sys_path():
+    """Přidá kořenovou složku projektu do sys.path, pokud tam ještě není."""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.abspath(os.path.join(current_dir, ".."))
 
-# Načteme cestu k adresáři z config.json
-def load_config():
-    """Načte konfiguraci z JSON souboru."""
-    try:
-        with open('config.json', 'r', encoding='utf-8') as config_file:
-            config = json.load(config_file)
-            return config.get("watched_folder", "")  # Vrátí cestu k adresáři nebo prázdný řetězec
-    except Exception as e:
-        print(f"Error loading config: {e}")
-        return ""
+    if project_root not in sys.path:
+        sys.path.append(project_root)
 
+
+add_project_root_to_sys_path()
+# Import modulu pro monitoring
+from monitor.monitor import start_monitoring
 # Hlavní program
-if __name__ == "__main__":
-    watched_folder = load_config()  # Načteme cestu z config.json
+from src.util.json_util import ConfigSingleton
+
+
+def main():
+    """Spustí monitoring, pokud je v konfiguraci zadána sledovaná složka."""
+    config = ConfigSingleton()
+    try:
+        watched_folder = config.get("watched_folder", raise_error=True)
+    except KeyError as e:
+        print(f"Chyba: {e}")
+
     if watched_folder:
         start_monitoring(watched_folder)
     else:
-        print("No watched folder specified in config.")
+        print("Nebyla zadána žádná sledovaná složka v konfiguraci.")
+
+
+if __name__ == "__main__":
+    main()

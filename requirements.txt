@@ -4,3 +4,4 @@ flake8
 pytest
 watchdog
 regex
+blinker
