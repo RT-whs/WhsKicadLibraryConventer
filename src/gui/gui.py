@@ -1,10 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, simpledialog
-from src.util.lib_util import load_existing_lib_patches, make_lib_base_structure,save_new_lib_to_kicad_settings
+from src.util.lib_util import load_existing_lib_patches
 from src.util.json_util import ConfigSingleton
 from src.objects.symbol import kicad_symbol
 from blinker import Signal
+from src.events.eventReceiver import EventReceiver
+from src.objects.filehandler import FileHandlerKicad
+
 
 def show_in_gui(symbol_object: kicad_symbol):
 
@@ -137,26 +140,29 @@ def show_in_gui(symbol_object: kicad_symbol):
     # Událost dvojkliku
     tree.bind("<Double-1>", on_double_click)
 
-    # Create library selector
-
+    
+    signal_gui_lib_create_button_pressed = Signal()     
+    fileHandler = FileHandlerKicad()   
+    fileHandler.registerEventReceiverCreateLibrary(signal_gui_lib_create_button_pressed)
    
    
-    def on_click_CreateLib():
-        
+    def on_click_CreateLib():        
         library_path, library_name = select_library_path_and_name()
-        #create folders
-        make_lib_base_structure(library_path, library_name)
-        #add library to kicad definition
-        save_new_lib_to_kicad_settings(library_path, library_name)
-        #update structure
+        signal_gui_lib_create_button_pressed.emit(sender="GUI",library_path = library_path, library_name = library_name )
+
+        
+    def registerEventLibCreated(self, signal_lib_created):
+        self.receiverLibCreated = EventReceiver(signal_lib_created, self.EventLibCreated)
+    
+    def unregisterEventLibCreated(self):
+        self.receiverLibCreated.disconnect()
+
+    def EventLibCreated(self, sender, **kwargs):
         nonlocal libraries_whs_kicad
-        libraries_whs_kicad = load_existing_lib_patches()
+        libraries_whs_kicad = kwargs['libraries_whs_kicad_collection'] #load_existing_lib_patches()
         cbDestLibname['values'] = libraries_whs_kicad
-        
-        
 
 
-        
 
     def select_library_path_and_name():
         root = tk.Tk()
@@ -176,7 +182,7 @@ def show_in_gui(symbol_object: kicad_symbol):
 
         return library_path, library_name
     
-    
+    # Create library selector
     def on_combobox_select(event):   
         cbDestLibname.setvar('InternalSelected','true')             
         symbol_object.set_destination_library(cbDestLibname.get())

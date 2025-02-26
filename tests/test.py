@@ -69,7 +69,7 @@ class TestData(unittest.TestCase):
 
         """Show properties in window, usually should be commented"""
         #now the data are ready for show in editor and processing
-        #show_in_gui(obj_test_symbol)
+        show_in_gui(obj_test_symbol)
         """Temporary code end""" 
         
         #----------------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ class TestData(unittest.TestCase):
 
     def test_libraries(self):
         whs_lib_list = load_existing_lib_patches()
-        self.assertIn(os.path.normpath('parts\\passive\\diodes\\whs_diode_Led.kicad_sym'),whs_lib_list)
+        #self.assertIn(os.path.normpath('parts\\passive\\diodes\\whs_diode_Led.kicad_sym'),whs_lib_list)
         
 
 

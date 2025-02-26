@@ -5,7 +5,7 @@ from typing import TypedDict
 import regex as re
 from blinker import Signal
 import string
-from src.events.eventReciever import EventReceiver
+from src.events.eventReceiver import EventReceiver
 from typing import Final
 
 class PropertyDictWHS(TypedDict):
@@ -45,7 +45,23 @@ class kicad_symbol:
         self.receiverSave.disconnect()
 
     def saveCmd(self, sender, **kwargs):
+        """Steps to do
+        1. When create new library take header from temp library
+        """
+        
+
         print(f"Custom Handler saveCmd: {sender} sent {kwargs}")
+        print("Updating symbol")
+        print("Checking ERP number at helios, check collisions -- not finished")
+
+        print("Updating symbol footprint")
+        print("Updating symbol 3d data")
+
+
+        print("Saving symbol to library")
+        print("Saving symbol footprint")
+        print("Saving symbol 3d shape")
+
 
         
 
