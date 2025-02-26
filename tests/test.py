@@ -1,6 +1,7 @@
 #Main test
 import sys
 import os
+from src.objects.filehandler import FileHandlerKicad
 # Přidáme kořenovou složku projektu do sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, ".."))
@@ -68,7 +69,7 @@ class TestData(unittest.TestCase):
 
         """Show properties in window, usually should be commented"""
         #now the data are ready for show in editor and processing
-        show_in_gui(obj_test_symbol)
+        #show_in_gui(obj_test_symbol)
         """Temporary code end""" 
         
         #----------------------------------------------------------------------------------------
@@ -124,7 +125,7 @@ class TestData(unittest.TestCase):
         #----------------------------------------------------------------------------------------           
 
     def test_libraries(self):
-        whs_lib_list = load_existing_lib_patches()
+        whs_lib_list = FileHandlerKicad.Static.get_existing_libs()
         print("Finded libraries in libraries folder: " +str(whs_lib_list))
         
 
