@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog, simpledialog
-from src.util.lib_util import load_existing_lib_patches
 from src.util.json_util import ConfigSingleton
 from src.objects.symbol import kicad_symbol
 from blinker import Signal
@@ -104,7 +103,7 @@ def show_in_gui(symbol_object: kicad_symbol):
         #close this window
         root.destroy()
     
-    libraries_whs_kicad = load_existing_lib_patches()
+    libraries_whs_kicad = FileHandlerKicad.Static.get_existing_libs()
     
     root = tk.Tk()
     root.title("Editable Properties Viewer")
@@ -148,10 +147,16 @@ def show_in_gui(symbol_object: kicad_symbol):
    
     def on_click_CreateLib():        
         library_path, library_name = select_library_path_and_name()
-        signal_gui_lib_create_button_pressed.emit(sender="GUI",library_path = library_path, library_name = library_name )
+        kwargs = {"library_path": library_path, "library_name": library_name}
+        print(type(kwargs))
+        results = signal_gui_lib_create_button_pressed.send("GUI", **kwargs)
+        print("All handlers finished:", results)
 
+        nonlocal libraries_whs_kicad
+        libraries_whs_kicad = results[0][1] 
+        cbDestLibname['values'] = libraries_whs_kicad
         
-    def registerEventLibCreated(self, signal_lib_created):
+    """def registerEventLibCreated(self, signal_lib_created):
         self.receiverLibCreated = EventReceiver(signal_lib_created, self.EventLibCreated)
     
     def unregisterEventLibCreated(self):
@@ -161,7 +166,7 @@ def show_in_gui(symbol_object: kicad_symbol):
         nonlocal libraries_whs_kicad
         libraries_whs_kicad = kwargs['libraries_whs_kicad_collection'] #load_existing_lib_patches()
         cbDestLibname['values'] = libraries_whs_kicad
-
+    """
 
 
     def select_library_path_and_name():
@@ -169,7 +174,7 @@ def show_in_gui(symbol_object: kicad_symbol):
         root.withdraw()  # Skryje hlavní okno aplikace
 
         # Dialog pro výběr cesty ke knihovně
-        library_path = filedialog.askdirectory(title="Select Library Path",initialdir = initial_library_path )
+        library_path = filedialog.askdirectory(title="Select Library Path",initialdir = symbol_object.config_json.config['library_final_folder'] )
         if not library_path:  # Pokud uživatel zruší dialog
             print("Library path selection cancelled.")
             return None, None

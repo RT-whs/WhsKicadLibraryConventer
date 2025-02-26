@@ -1,8 +1,9 @@
 {
     "watched_folder": "C:\\WHS_Kicad_Temp",
-    "library_final_folder": "C:\\WHS_Kicad_Libraries",
-    "symbol_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\8.0\\sym-lib-table",
-    "footprint_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\8.0\\fp-lib-table",
+    "library_root_folder": "C:\\WHS_Kicad_Libraries",
+    "library_final_folder": "C:\\WHS_Kicad_Libraries\\parts",
+    "symbol_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\9.0\\sym-lib-table",
+    "footprint_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\9.0\\fp-lib-table",
 
     "sym_property_mandatory": [
         {

@@ -14,7 +14,6 @@ from typing import TypedDict
 #should use absolute linking so needed to set the env var by this: 
 #$env:PYTHONPATH="F:\WHS\Projects\Company\WhsKicadLibraryConverter"
 from src.gui.gui import show_in_gui
-from src.util.lib_util import load_existing_lib_patches
 from src.objects.symbol import kicad_symbol
 
 
@@ -126,7 +125,7 @@ class TestData(unittest.TestCase):
 
     def test_libraries(self):
         whs_lib_list = load_existing_lib_patches()
-        #self.assertIn(os.path.normpath('parts\\passive\\diodes\\whs_diode_Led.kicad_sym'),whs_lib_list)
+        print("Finded libraries in libraries folder: " +str(whs_lib_list))
         
 
 
