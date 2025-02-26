@@ -69,7 +69,7 @@ class TestData(unittest.TestCase):
 
         """Show properties in window, usually should be commented"""
         #now the data are ready for show in editor and processing
-        show_in_gui(obj_test_symbol)
+        #show_in_gui(obj_test_symbol)
         """Temporary code end""" 
         
         #----------------------------------------------------------------------------------------
@@ -79,15 +79,46 @@ class TestData(unittest.TestCase):
         self.assertEqual("F:\WHS\Projects\Company\WhsKicadLibraryConventer\tests\whs_test_destinationLib.kicad_sym", str(obj_test_symbol.selected_destination_lib) )
 
         #----------------------------------------------------------------------------------------
-        #                           SAVE PACKAGE
+        #                           DELETE matched key
         #----------------------------------------------------------------------------------------   
+        deleted_symbol = obj_test_symbol.TextParsing.delete_matching_key(obj_test_symbol.symbolText, "(property ","")
+        self.maxDiff = None
+        self.assertEqual("""(symbol "KY_DDLN31.23-5G8H-36-J3T3-200-R18"\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t\n\t\t(symbol "KY_DDLN31.23-5G8H-36-J3T3-200-R18_1_1"\n\t\t\t(rectangle\n\t\t\t\t(start 5.08 2.54)\n\t\t\t\t(end 17.78 -10.16)\n\t\t\t\t(stroke\n\t\t\t\t\t(width 0.254)\n\t\t\t\t\t(type default)\n\t\t\t\t)\n\t\t\t\t(fill\n\t\t\t\t\t(type background)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin passive line\n\t\t\t\t(at 0 -5.08 0)\n\t\t\t\t(length 5.08)\n\t\t\t\t(name "K_1"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number "1"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin passive line\n\t\t\t\t(at 0 -2.54 0)\n\t\t\t\t(length 5.08)\n\t\t\t\t(name "A_1"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number "2"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin passive line\n\t\t\t\t(at 0 -7.62 0)\n\t\t\t\t(length 5.08)\n\t\t\t\t(name "K_2"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number "3"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t\t(pin passive line\n\t\t\t\t(at 0 0 0)\n\t\t\t\t(length 5.08)\n\t\t\t\t(name "A_2"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t\t(number "4"\n\t\t\t\t\t(effects\n\t\t\t\t\t\t(font\n\t\t\t\t\t\t\t(size 1.27 1.27)\n\t\t\t\t\t\t)\n\t\t\t\t\t)\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)""",
+                         deleted_symbol)
         
+        deleted_symbol = obj_test_symbol.TextParsing.delete_matching_key("My text for testing to delete", "delete","DELETED_KEY")
+        self.assertEqual("My text for testing to delete" , deleted_symbol)
 
+        deleted_symbol = obj_test_symbol.TextParsing.delete_matching_key("My text for testing to (delete  nonsense)", "(delete","DELETED_KEY")
+        self.assertEqual("My text for testing to DELETED_KEY" , deleted_symbol)
+
+
+        #----------------------------------------------------------------------------------------
+        #                           Replacing
+        #----------------------------------------------------------------------------------------   
+        replaced_text = kicad_symbol.TextParsing.place_keys_over_placeholder("This is a testing string with placeholder","new text","placeholder")
+        self.assertEqual("This is a testing string with new text",replaced_text)
+
+        replaced_text = kicad_symbol.TextParsing.place_keys_over_placeholder("This is a testing string with Placeholder","new text","placeholder")
+        self.assertNotEqual("This is a testing string with new text",replaced_text)
+        #test to remove also empty lines
+        replaced_text = kicad_symbol.TextParsing.place_keys_over_placeholder("This is a testing string with placeholder,\nplaceholder\nplaceholder\n\n\n","new text","placeholder")
+        self.assertEqual("This is a testing string with new text,",replaced_text)
+
+
+        #project testing load merged data
+        deleted_symbol = obj_test_symbol.TextParsing.delete_matching_key(obj_test_symbol.symbolText, "(property ",kicad_symbol.PLACEHOLDER_DELETED_KEY)
+        obj_test_symbol.ActualizeSymbolTextFinal(deleted_symbol)
+
+
+        print(obj_test_symbol.symbolTextFinal)
+        
         #----------------------------------------------------------------------------------------
         #                           LOAD 3D AND OTHER DATA
         #----------------------------------------------------------------------------------------   
-        # 
-        # 
+
+
+        
 
         #----------------------------------------------------------------------------------------
         #                           CHECK FILES PRESENCE

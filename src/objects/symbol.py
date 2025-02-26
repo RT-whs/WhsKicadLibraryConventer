@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import TypedDict
 import regex as re
 from blinker import Signal
+import string
 from src.events.eventReciever import EventReceiver
-
+from typing import Final
 
 class PropertyDictWHS(TypedDict):
     name: str
@@ -19,14 +20,19 @@ class kicad_symbol_print_depth(Enum):
 
 
 class kicad_symbol:
+    #Constants
+    PLACEHOLDER_NAME: Final[str] = "{PLACEHOLDER_NAME}"
+    PLACEHOLDER_VALUE: Final[str] = "{PLACEHOLDER_VALUE}"
+    PLACEHOLDER_DELETED_KEY: Final[str] = "{PLACEHOLDER_DELETED_KEY}"
+
     def __init__(self, one_symbol_string):
         self.symbolText = one_symbol_string
         self.propertiesTextCollection = self.TextParsing.get_matching_key(self.symbolText,  "(property ")
         self.propertiesInternalDict: PropertyDictWHS = self.TextParsing.get_WhsDict_properties(self.propertiesTextCollection) 
         self.config_json = ConfigSingleton()
-        self.propertiesMandatory = self.TextParsing.get_mandatory_dict_properties(self.config_json.config.get('sym_property_mandatory'))
-        self.propertiesFinal = self.TextParsing.merge_properties(self.propertiesInternalDict, self.propertiesMandatory )
-
+        self.propertiesMandatory = self.TextParsing.get_mandatory_dict_properties(self.config_json.config.get('sym_property_mandatory'))        
+        self.propertiesFinal:PropertyDictWHS = self.TextParsing.merge_properties(self.propertiesInternalDict, self.propertiesMandatory )
+        self.symbolTextFinal = self.symbolText
 
     def set_destination_library(self, library_file):
         self.selected_destination_lib = Path(self.config_json.config["library_final_folder"]) / library_file
@@ -39,7 +45,10 @@ class kicad_symbol:
         self.receiverSave.disconnect()
 
     def saveCmd(self, sender, **kwargs):
-        print(f"Custom Handler: {sender} sent {kwargs}")
+        print(f"Custom Handler saveCmd: {sender} sent {kwargs}")
+
+        
+
         
 
     def __str__(self):
@@ -73,6 +82,23 @@ class kicad_symbol:
             printresult += self.config_json.get_print_content(60)               
             return printresult
         
+    ##Subroutines
+    def ActualizeSymbolTextFinal(self, symbolTextWithoutProperties):
+        #update snippets
+        for key, value in self.propertiesFinal.items():            
+            value["snippet"] = str(value["snippet"]).replace(self.PLACEHOLDER_NAME,value['name'])
+            value["snippet"] = str(value["snippet"]).replace(self.PLACEHOLDER_VALUE,value['value'])
+
+        #serialize snippets
+        keys_listPropertiesFinal = list(self.propertiesFinal.keys())
+        snippet = "\n".join(
+            str(self.propertiesFinal[key]['snippet'])
+            for key in keys_listPropertiesFinal
+            )
+        #print("Variable snippet type is:" +str(type(snippet)))
+        self.symbolTextFinal = self.TextParsing.place_keys_over_placeholder(symbolTextWithoutProperties , snippet , self.PLACEHOLDER_DELETED_KEY)
+
+
     class TextParsing:
         @staticmethod
         def get_matching_key(symbol_properties, search_pattern):
@@ -120,7 +146,7 @@ class kicad_symbol:
                         "name": property_name,
                         "value": property_value,
                         "format_value": "",
-                        "snippet": {property}
+                        "snippet": property
                     }
                 properties_dict[property_name] = property_dict
             return properties_dict
@@ -143,9 +169,49 @@ class kicad_symbol:
                 if key not in properties_merged:  # Přidání pouze chybějících položek
                     properties_merged[key] = value
 
-              # Výpis všech 'name'
-            """for value in properties_merged.values():
-                print("name:", value["name"])  # Přístup k hodnotě 'name'"""   
             return properties_merged
+        
+        
+        @staticmethod
+        def delete_matching_key(symbol_properties, search_pattern, replacement):
+            start_pos = 0
+            text_length = len(symbol_properties)
+            if symbol_properties.find('(',0) == -1:
+                return symbol_properties
+            while start_pos < text_length:
+                 start_pos = symbol_properties.find(search_pattern, start_pos)
+                 if start_pos == -1:
+                     break
+                 
+                 bracket_counter = 1
+                 end_pos = start_pos + 1
+
+                 while bracket_counter > 0 and end_pos < text_length:
+                     if symbol_properties[end_pos] == '(':
+                         bracket_counter += 1
+                     elif symbol_properties[end_pos] == ')':
+                         bracket_counter -= 1
+                     end_pos += 1
+
+                     if bracket_counter == 0:
+                         symbol_properties = symbol_properties[:start_pos]+ replacement + symbol_properties[end_pos:]  # Odeber nalezený blok
+                         text_length = len(symbol_properties)  # Aktualizuj délku textu
+                         start_pos = start_pos  # Pokračuj od stejné pozice
+                         break
+                     
+            return symbol_properties
+        
+
+        @staticmethod
+        def place_keys_over_placeholder(sourceDocument : str, keys, placeholder):
+            resultDoc = sourceDocument.replace(placeholder,keys,1)
+            resultDoc = resultDoc.replace(placeholder,"")
+            # Remove empty lines
+            resultDoc = "\n".join(line for line in resultDoc.splitlines() if line.strip())
+            return resultDoc
+            
+            
+            
+            
 
    
