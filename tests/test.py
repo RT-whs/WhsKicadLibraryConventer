@@ -1,8 +1,10 @@
 #Main test
 import sys
 import os
+from pathlib import Path
 from src.objects.filehandler import FileHandlerKicad
-# Přidáme kořenovou složku projektu do sys.path
+
+# add root project folder to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, ".."))
 if project_root not in sys.path:
@@ -51,6 +53,16 @@ class TestData(unittest.TestCase):
         keys_list = list(obj_test_symbol.propertiesInternalDict.keys())
         #print(property_temp_dict[keys_list[0]]) 
         self.assertEqual( "Reference", obj_test_symbol.propertiesInternalDict[keys_list[0]] ['name'] )
+        
+
+        #----------------------------------------------------------------------------------------
+        #                           Get symbol name
+        #----------------------------------------------------------------------------------------     
+        self.assertEqual( "KY_DDLN31.23-5G8H-36-J3T3-200-R18", obj_test_symbol.propertiesInternalDict['Value']['value'] )
+        self.assertEqual( "KY_DDLN31.23-5G8H-36-J3T3-200-R18", obj_test_symbol.get_symbol_name() )
+       
+        #print(property_temp_dict[keys_list[0]]) 
+        self.assertEqual( "Reference", obj_test_symbol.propertiesInternalDict[keys_list[0]] ['name'] )
 
         #----------------------------------------------------------------------------------------
         #                           Check merge_properties
@@ -69,14 +81,19 @@ class TestData(unittest.TestCase):
 
         """Show properties in window, usually should be commented"""
         #now the data are ready for show in editor and processing
+
+        
         #show_in_gui(obj_test_symbol)
         """Temporary code end""" 
         
         #----------------------------------------------------------------------------------------
         #                           SAVE PROPERTIES TO SYM
         #----------------------------------------------------------------------------------------       
-        obj_test_symbol.set_destination_library("F:\WHS\Projects\Company\WhsKicadLibraryConventer\tests\whs_test_destinationLib.kicad_sym")
-        self.assertEqual("F:\WHS\Projects\Company\WhsKicadLibraryConventer\tests\whs_test_destinationLib.kicad_sym", str(obj_test_symbol.selected_destination_lib) )
+
+        
+        
+        obj_test_symbol.set_destination_library(r"F:\WHS\Projects\Company\WhsKicadLibraryConventer\tests\whs_test_destinationLib.kicad_sym")
+        self.assertEqual( r"F:\WHS\Projects\Company\WhsKicadLibraryConventer\tests\whs_test_destinationLib.kicad_sym", str(obj_test_symbol.selected_destination_lib) )
 
         #----------------------------------------------------------------------------------------
         #                           DELETE matched key
@@ -111,13 +128,35 @@ class TestData(unittest.TestCase):
         obj_test_symbol.ActualizeSymbolTextFinal(deleted_symbol)
 
 
-        print(obj_test_symbol.symbolTextFinal)
+        #print(obj_test_symbol.symbolTextFinal)
         
         #----------------------------------------------------------------------------------------
         #                           LOAD 3D AND OTHER DATA
         #----------------------------------------------------------------------------------------   
-
-
+        obj_test_symbol.footprintFileSource = """(model "C:\\WHS_Kicad_Temp\\SamacSys_Parts.3dshapes\\KY_DDLN31.23-5G8H-36-J3T3-200-R18.stp"
+		    (offset
+			    (xyz 0 0 0)
+		    )
+		    (scale
+			    (xyz 1 1 1)
+		    )
+		    (rotate
+			    (xyz 0 0 0)
+		    )
+	        )"""
+        
+        obj_test_symbol.set_model_value(r"C:\testfolder\test.stp")
+        self.assertEqual( r"""(model "C:\testfolder\test.stp"
+		    (offset
+			    (xyz 0 0 0)
+		    )
+		    (scale
+			    (xyz 1 1 1)
+		    )
+		    (rotate
+			    (xyz 0 0 0)
+		    )
+	        )""", obj_test_symbol.footprintFileDestination)
         
 
         #----------------------------------------------------------------------------------------
@@ -126,8 +165,17 @@ class TestData(unittest.TestCase):
 
     def test_libraries(self):
         whs_lib_list = FileHandlerKicad.Static.get_existing_libs()
-        print("Finded libraries in libraries folder: " +str(whs_lib_list))
-        
+        #print("Finded libraries in libraries folder: " +str(whs_lib_list))
+
+    def test_FileHandler(self):
+        path = FileHandlerKicad.Static.get_lib_path_with_symbol_variable("C:\WHS_Kicad_Libraries\parts\passive\resistors\whs_resistors_test.kicad_sym") 
+        self.assertEqual( "${WHS_MAIN_LIB}/passive/resistors/whs_resistors_test.kicad_sym", path)
+        print("Path from file handler: " + path)
+
+        #Update footprint library definition file
+        #Check here in test folder manually
+        destFile = os.path.join( str(Path(__file__).parent), "fp-lib-table" )
+        FileHandlerKicad.Static.save_new_footprint_lib_folder_to_kicad_settings("","test_library",destFile)
 
 
 if __name__ == '__main__':
