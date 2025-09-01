@@ -5,3 +5,5 @@ pytest
 watchdog
 regex
 blinker
+pyodbc
+cryptography

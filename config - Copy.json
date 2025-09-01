@@ -1,16 +1,19 @@
 {
     "watched_folder": "C:\\WHS_Kicad_Temp",
-    "watched_sym_file": "SamacSys_Parts.kicad_sym",
-    "watched_pretty_folder": "SamacSys_Parts.pretty",
+    "watched_sym_file" : "SamacSys_Parts.kicad_sym",
+    "watched_pretty_folder" : "SamacSys_Parts.pretty",
     "library_root_folder": "C:\\WHS_Kicad_Libraries",
     "library_final_folder": "C:\\WHS_Kicad_Libraries\\parts",
-    "library_final_folder_path_symbol_name": "${WHS_MAIN_LIB}",
+    "library_final_folder_path_symbol_name" : "${WHS_MAIN_LIB}",
     "symbol_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\9.0\\sym-lib-table",
     "footprint_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\9.0\\fp-lib-table",
-    "helios_app_login": "romtom2",
-    "helios_app_password": "gAAAAABn0X5rfrTywWxM_FpfsvMQCMoonrexbRiTnBBCtwErATGMaXdj8zFfVmr5Z3iRyZCEqRkTZkWvc4Z2J1PHITyqgl8xtw==",
-    "helios_ip_address": "10.40.96.209",
-    "helios_db_catalog": "Helios001",
+
+    "helios_app_login" : "",
+    "helios_app_password" : "",
+    "helios_ip_address" : "",
+    "helios_db_catalog" : "",
+
+
     "sym_property_mandatory": [
         {
             "name": "ERP",
@@ -18,9 +21,10 @@
             "format_value": "^[0-9]{3}/[0-9]{6}$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 0 0 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n    )\n)"
         },
+        
         {
             "name": "ERP_Title1_czech",
-            "value": "Popis produktu \u010desky",
+            "value": "Popis produktu česky",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
         },
@@ -41,7 +45,8 @@
             "value": "Order number",
             "format_value": "^.*$",
             "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -594.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (hide yes)\n   )\n)"
-        },
+        }
+        ,
         {
             "name": "ERP_Supplier_Name",
             "value": "Erp suplier name",
@@ -52,7 +57,7 @@
             "name": "ERP_Manufacturer_Name",
             "value": "Erp producer name",
             "format_value": "^.*$",
-            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -694.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (justify left top)\n        (hide yes)\n    )\n)"
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 19.05 -694.92 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n      (justify left top)\n        (hide yes)\n    )\n)"        
         },
         {
             "name": "ERP_link1",
@@ -74,3 +79,4 @@
         }
     ]
 }
+  

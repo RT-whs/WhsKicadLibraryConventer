@@ -38,8 +38,10 @@ class kicad_symbol:
         self.footprintFileSource, self.footprintSourcePath = FileHandlerKicad.Static.get_footprint_file_content_from_watched_folder(str(self.get_footprint_name()))
 
         self.filePathStp3DSource = self.get_model_value()
+        
         self.filePathStp3DDest   = ""
         self.selected_destination_lib ="" #setter = set_destination_library 
+        
 
 
     """Set destination lib file"""
@@ -57,17 +59,23 @@ class kicad_symbol:
         #Example C:\WHS_Kicad_Libraries\parts\passive\resitors\whs_resistors_highPower.3dshapes\KY_DDLN31.23-5G8H-36-J3T3-200-R18.stp
         #where file name is taken from basename 3d source
         #3dSource is taken from from kicad_mod file directly readed on init
-        library_path = str(self.selected_destination_lib).replace( 'kicad_sym', '3dshapes') 
-        self.filePathStp3DDest = Path(library_path).joinpath(os.path.basename(self.filePathStp3DSource))
+        library_path = FileHandlerKicad.Static.fix_path( str(self.selected_destination_lib).replace( 'kicad_sym', '3dshapes'))
+        if self.filePathStp3DSource is not None:
+            if (os.path.isfile(self.filePathStp3DSource)):
+                self.filePathStp3DDest = Path(library_path).joinpath(os.path.basename(self.filePathStp3DSource))
 
         #Footprint new file
         """Get path from selected library"""
         #Example C:\WHS_Kicad_Libraries\parts\passive\resitors\whs_resistors_highPower.pretty\KYDDLN31235G8H36J3T3200R18.kicad_mod
         footprint_path = str(self.selected_destination_lib).replace( 'kicad_sym', 'pretty') 
-        self.footprintDestionationPath = Path(footprint_path).joinpath(os.path.basename(self.footprintSourcePath))
-        
-        """Adjust the file content ... model link"""
-        self.set_model_value(str(self.filePathStp3DDest)) #write link to footprint file
+        if (self.footprintSourcePath is not None):
+            if (Path(self.footprintSourcePath).is_file):
+                self.footprintDestionationPath = Path(footprint_path).joinpath(os.path.basename(self.footprintSourcePath))        
+                """Adjust the file content ... model link"""
+                self.set_model_value(str(self.filePathStp3DDest)) #write link to footprint file
+
+
+
 
 
         
@@ -79,15 +87,17 @@ class kicad_symbol:
     """
     def update_properties_by_library_name(self, selected_library_name):
         footprint = self.propertiesFinal['Footprint'] 
-        footList=str(footprint['value']).split(':')
-        footList[0] = Path(selected_library_name).stem #filename without suffix
-        self.propertiesFinal['Footprint']['value'] = footList[0] + ':' + footList[1]
+        footList=str(footprint['value']).split(':')        
+        self.propertiesFinal['Footprint']['value'] =  Path(selected_library_name).stem + ':' + footList[-1] # use last element
 
     """Can be used like file name"""
     def get_footprint_name(self):
         _fpComplete = self.propertiesInternalDict['Footprint']['value']
-        if ':' not in _fpComplete:
+        if ':' not in _fpComplete and len(_fpComplete) > 0:
+            return _fpComplete
+        elif len(_fpComplete) <= 0:
             raise ValueError("Footprint name is missing ':' separator or value after it.")
+        
         _fpName = str(_fpComplete).split(':',1) #get part after :
         if len(_fpName) < 2 or not _fpName[1].strip():
             raise ValueError("Footprint name is empty after ':' separator.")
@@ -100,8 +110,12 @@ class kicad_symbol:
     
 
     def set_model_value(self, new_value):
-        self.footprintFileDestination = self.footprintFileSource
-        fixed_new_value = FileHandlerKicad.Static.fix_path(new_value)
+        if (new_value is None):
+            fixed_new_value = ''
+        else:
+            self.footprintFileDestination = self.footprintFileSource
+            fixed_new_value = FileHandlerKicad.Static.fix_path_forward_slash(new_value)
+        
         self.footprintFileDestination = re.sub(
             r'(\(\s*model\s+")([^"]+)(")', 
             rf'\1{fixed_new_value}\3', 
@@ -126,15 +140,37 @@ class kicad_symbol:
         print(f"Custom Handler saveCmd: {sender} sent {kwargs}")
         print("Checking ERP number at helios, check collisions -- not implemented now")
 
-        print("Copy  footprint symbolname.kicad_mod from temp library to selected final library")
+        print("Save symbol to library")        
+        self.ActualizeSymbolTextFinal()
+        with open(self.selected_destination_lib, "r+", encoding="utf-8") as file:
+            content = file.read() 
+            index = content.rfind(")")
+            if index != -1:
+                content = content[:index] + self.symbolTextFinal + content[index:]
+
+        # Zapiš zpět do souboru
+        with open(self.selected_destination_lib, "w", encoding="utf-8") as file:
+            file.write(content)  
+
+        if hasattr(self, 'footprintDestionationPath'):
+            print("Copy  footprint symbolname.kicad_mod from temp library to selected final library")
+            with open(self.footprintDestionationPath, "w", encoding="utf-8") as file:
+                file.write(self.footprintFileDestination)
 
         print("Kicad.mod delete original")
-
-        print("Update kicad mode in temp folder for proper 3dshape step file. ")    
-        
-
-        print("Move symbol 3dshape file symbolname.stp from temp library to selected final library")
-        FileHandlerKicad.Static.move_file( self.filePathStp3DSource, self.filePathStp3DDest)
+        if os.path.exists(self.footprintSourcePath):  # Ověří, zda soubor existuje
+            os.remove(self.footprintSourcePath)  # Smaže soubor
+            self.footprintSourcePath = ""            
+        else:
+            print("FileExistsError footprintSourcePath not exist")
+        if self.filePathStp3DSource is not None:
+            if (Path(self.filePathStp3DSource).is_file ):
+                print("Move symbol 3dshape file symbolname.stp from temp library to selected final library")
+                FileHandlerKicad.Static.move_file( self.filePathStp3DSource, self.filePathStp3DDest)
+            else:
+                print("Not moved symbol 3dshape - path is not to file")  
+        else:
+            print("Not moved symbol 3dshape - file not exist")
 
         
 
@@ -176,11 +212,33 @@ class kicad_symbol:
             return printResult
         
     ##Subroutines
-    def ActualizeSymbolTextFinal(self, symbolTextWithoutProperties):
+    def ActualizeSymbolTextFinal(self):
+        """Inputs:
+        a) symbol text original 
+
+        Step:
+        1. Update snippets in properties final
+
+        Outputs:
+        1. symbol symbolTextFinal
+        """
+
         #update snippets
         for key, value in self.propertiesFinal.items():            
-            value["snippet"] = str(value["snippet"]).replace(self.PLACEHOLDER_NAME,value['name'])
-            value["snippet"] = str(value["snippet"]).replace(self.PLACEHOLDER_VALUE,value['value'])
+            prop = self.TextParsing.PropertyValue( value["snippet"]) #load value
+            prop.update( value['name'], value['value'])
+            value["snippet"] = prop.text
+            
+            """           Example data
+            (property "Value" "KY_DDLN31.23-5G8H-36-J3T3-200-R18"
+			(at 19.05 5.08 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left top)
+			)
+		    )"""
 
         #serialize snippets
         keys_listPropertiesFinal = list(self.propertiesFinal.keys())
@@ -188,11 +246,40 @@ class kicad_symbol:
             str(self.propertiesFinal[key]['snippet'])
             for key in keys_listPropertiesFinal
             )
-        #print("Variable snippet type is:" +str(type(snippet)))
-        self.symbolTextFinal = self.TextParsing.place_keys_over_placeholder(symbolTextWithoutProperties , snippet , self.PLACEHOLDER_DELETED_KEY)
+        print("Variable snippet type is:" +str(type(snippet)))
+
+        symbolTextWithoutProperties = self.TextParsing.delete_matching_key( self.symbolText, "(property", self.PLACEHOLDER_DELETED_KEY)
+        self.symbolTextFinal = self.TextParsing.place_keys_over_placeholder( symbolTextWithoutProperties , snippet, self.PLACEHOLDER_DELETED_KEY)
 
 
     class TextParsing:
+
+        class PropertyValue:
+             def __init__(self, text):
+                 self.text = text
+                 self.first_value = None
+                 self.second_value = None
+                 self._parse()
+            
+             def _parse(self):
+                 """Najde první a druhou hodnotu v uvozovkách a uloží je."""
+                 pattern = r'\"(.*?)\".*?\"(.*?)\"'
+                 match = re.search(pattern, self.text, re.DOTALL)
+                 if match:
+                     self.first_value = match.group(1)
+                     self.second_value = match.group(2)
+            
+             def update(self, new_first, new_second):
+                 """Aktualizuje text s novými hodnotami."""
+                 pattern = r'\"(.*?)\".*?\"(.*?)\"'
+                 self.text = re.sub(pattern, f'"{new_first}" "{new_second}"', self.text, count=1)
+                 self.first_value = new_first
+                 self.second_value = new_second
+            
+             def __repr__(self):
+                 return f'PropertyValue(first="{self.first_value}", second="{self.second_value}")'
+             
+    
         @staticmethod
         def get_matching_key(symbol_properties, search_pattern):
             matches = []
@@ -265,7 +352,7 @@ class kicad_symbol:
             return properties_merged
         
         
-        @staticmethod
+        @staticmethod #obsolete
         def delete_matching_key(symbol_properties, search_pattern, replacement):
             start_pos = 0
             text_length = len(symbol_properties)
@@ -295,7 +382,7 @@ class kicad_symbol:
             return symbol_properties
         
 
-        @staticmethod
+        @staticmethod #obsolete
         def place_keys_over_placeholder(sourceDocument : str, keys, placeholder):
             resultDoc = sourceDocument.replace(placeholder,keys,1)
             resultDoc = resultDoc.replace(placeholder,"")

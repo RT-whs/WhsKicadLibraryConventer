@@ -1,8 +1,11 @@
 #Main test
 import sys
 import os
+import re
 from pathlib import Path
 from src.objects.filehandler import FileHandlerKicad
+from src.objects.HeliosDB import HeliosDB
+from src.objects.TestDB import TestDB
 
 # add root project folder to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -29,10 +32,102 @@ class TestData(unittest.TestCase):
             self.text = temp_library_data
             
 
+    def test_helios(self):
+        self.db = HeliosDB()
+        self.assertTrue(self.db.connect() )
+
+        ### Get index from helios        
+        # self.db.send_query( r"SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'")
+        result = self.db.send_query( r"SELECT MAX(RegCis) AS MaxRegCis FROM TabKmenZbozi WHERE SkupZbo = 320")
+
+        number = int(result[0])
+        print(number)
+        print(number + 1)
+       
+
+        result = self.db.send_query( r"SELECT * FROM TabKmenZbozi WHERE SkupZbo = 320 AND RegCis = ?", number )
+        #zjistí že ID v této tabulce je autoincrement - potvrdí že je autoincrement id
+        result_row = self.db.send_query( r"SELECT name, is_identity FROM sys.columns WHERE object_id = OBJECT_ID('TabKmenZbozi')")
+
+        
+        self.db.close()    
+  
+
+    def test_wsl_testDB(self):
+        """ 
+        WSL2
+        Ubuntu 22.04
+
+        in wsl2 is docker 
+
+        docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Whs63306330" 
+            -e "MSSQL_PID=Developer" -e "MSSQL_AGENT_ENABLED=true" 
+            -p 14333:1433 --name sqlcontainerwsl --hostname sqlcontainerwsl 
+            -d mcr.microsoft.com/mssql/server:2022-latest
+
+        docker cmds in wsl
+        docker ps - show info about docker image
+        docker exec -it sqlcontainerwsl /bin/bash  - příkazový řádek přímo v image
+        docker inspect sqlcontainerwsl
+
+        Další kontejner sqlcmd který se po ukončení smaže .. obsahuje nástroj pro editaci sql serveru
+        docker run --rm -it mcr.microsoft.com/mssql-tools /opt/mssql-tools/bin/sqlcmd -S 172.17.0.2 -U sa -P "Whs63306330"
+
+        Připojení přes SSMS (ve Windows)
+            Server name: localhost,14333
+            Authentication: SQL Server Authentication
+            Login: sa
+            Password: heslo (to, co jsi nastavil v proměnné MSSQL_SA_PASSWORD) 
+
+            Databáze: heliosTestDb
+
+        Připojení přímo z wsl 
+        docker exec -it sqlcontainerwsl /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "heslo"
+        SELECT @@VERSION;
+
+        Připojení z windows
+        sqlcmd -S 127.0.0.1,14333 -U sa -P "Whs63306330"
+
+        show databases
+        SELECT name
+        FROM sys.databases;
+
+        show tables;
+        SELECT * FROM information_schema.tables;
+
+        delete table
+        DROP TABLE tablename;
+        """
+        #self.dbTest = TestDB()
+        #self.assertTrue(self.dbTest.connect() )
+        #self.dbTest.close()
+
+    def test_copy_table(self):
+        self.db = HeliosDB()
+        self.db.connect()
+        self.dbTest = TestDB()
+        self.dbTest.connect()
+        result = self.db.send_query( r"SELECT MAX(RegCis) AS MaxRegCis FROM TabKmenZbozi WHERE SkupZbo = 320")
+        number = int(result[0])
+        kmenova_karta = self.db.send_query( r"SELECT * FROM TabKmenZbozi WHERE SkupZbo = 320 AND RegCis = ?", number )
+        
+        #Copy table structure - uncoment when necessary
+        #col_defs = self.db.get_table_defs('TabKmenZbozi')        
+        #self.dbTest.create_table('TabKmenZbozi', col_defs)
+
+        #Save kmenova karta to new db
+        
+
+        self.dbTest.close()
+        self.db.close()
+
+
+
     def test_loading_symbol(self):
         matches = kicad_symbol.TextParsing.get_matching_key(self.text, "(symbol ")       
         self.assertEqual(2,len(matches))
     
+
     def test_properties(self):
 
         symbol_collection = kicad_symbol.TextParsing.get_matching_key(self.text, "(symbol ")
@@ -113,8 +208,8 @@ class TestData(unittest.TestCase):
         #----------------------------------------------------------------------------------------
         #                           Replacing
         #----------------------------------------------------------------------------------------   
-        replaced_text = kicad_symbol.TextParsing.place_keys_over_placeholder("This is a testing string with placeholder","new text","placeholder")
-        self.assertEqual("This is a testing string with new text",replaced_text)
+        replaced_text = kicad_symbol.TextParsing.place_keys_over_placeholder("This is a testing string with \"{placeholder}\"","new text","{placeholder}")
+        self.assertEqual("This is a testing string with \"new text\"",replaced_text)
 
         replaced_text = kicad_symbol.TextParsing.place_keys_over_placeholder("This is a testing string with Placeholder","new text","placeholder")
         self.assertNotEqual("This is a testing string with new text",replaced_text)
@@ -123,11 +218,22 @@ class TestData(unittest.TestCase):
         self.assertEqual("This is a testing string with new text,",replaced_text)
 
 
-        #project testing load merged data
-        deleted_symbol = obj_test_symbol.TextParsing.delete_matching_key(obj_test_symbol.symbolText, "(property ",kicad_symbol.PLACEHOLDER_DELETED_KEY)
-        obj_test_symbol.ActualizeSymbolTextFinal(deleted_symbol)
+        #project testing 
+        #update symbol text
+        obj_test_symbol.propertiesFinal.clear()
+        obj_test_symbol.propertiesFinal[0] = PropertyDictWHS = {
+            "name": "propnameexample",
+            "value": "123",
+            "format_value": "formatted_example",
+            "snippet": "(property \"{PLACEHOLDER_NAME}\" \"{PLACEHOLDER_VALUE}\"\n    (at 0 0 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n    )\n)"
+            }
+        
+        obj_test_symbol.symbolText = "This is a testing string with (property  \"{placeholder}\"  \"{placeholder}\" and more) and symbol continue";   
+        obj_test_symbol.ActualizeSymbolTextFinal()
+        self.assertEqual("This is a testing string with (property \"propnameexample\" \"123\"\n    (at 0 0 0)\n    (effects\n        (font\n            (size 1.27 1.27)\n        )\n    )\n) and symbol continue",obj_test_symbol.symbolTextFinal)
 
 
+       
         #print(obj_test_symbol.symbolTextFinal)
         
         #----------------------------------------------------------------------------------------
@@ -146,7 +252,7 @@ class TestData(unittest.TestCase):
 	        )"""
         
         obj_test_symbol.set_model_value(r"C:\testfolder\test.stp")
-        self.assertEqual( r"""(model "C:\testfolder\test.stp"
+        self.assertEqual( """(model "C:/testfolder/test.stp"
 		    (offset
 			    (xyz 0 0 0)
 		    )
@@ -163,9 +269,11 @@ class TestData(unittest.TestCase):
         #                           CHECK FILES PRESENCE
         #----------------------------------------------------------------------------------------           
 
+
     def test_libraries(self):
         whs_lib_list = FileHandlerKicad.Static.get_existing_libs()
         #print("Finded libraries in libraries folder: " +str(whs_lib_list))
+
 
     def test_FileHandler(self):
         path = FileHandlerKicad.Static.get_lib_path_with_symbol_variable("C:\WHS_Kicad_Libraries\parts\passive\resistors\whs_resistors_test.kicad_sym") 

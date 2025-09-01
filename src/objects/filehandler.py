@@ -4,6 +4,7 @@ from pathlib import PurePath
 from src.events.eventReceiver import EventReceiver
 from src.util.json_util import ConfigSingleton
 import shutil
+import re
 
 
 class FileHandlerKicad:
@@ -42,10 +43,13 @@ class FileHandlerKicad:
     class Static:
         @staticmethod
         def get_footprint_file_content_from_watched_folder(file_name_without_suffix:str):
-            watched_folder_filepath = Path( ConfigSingleton._instance.get( 'watched_folder'), 'SamacSys_Parts.pretty', file_name_without_suffix + ".kicad_mod")
-            with open(watched_folder_filepath, "r", encoding="utf-8") as file:
-                footprint_file = file.read() 
-                return footprint_file, watched_folder_filepath
+            watched_folder_filepath = Path( ConfigSingleton._instance.get( 'watched_folder'), ConfigSingleton._instance.get( 'watched_pretty_folder'), file_name_without_suffix + ".kicad_mod")
+            if os.path.isfile(watched_folder_filepath):            
+                with open(watched_folder_filepath, "r", encoding="utf-8") as file:
+                    footprint_file = file.read() 
+                    return footprint_file, watched_folder_filepath
+            else:
+                return "", ""
 
         
         @staticmethod
@@ -174,4 +178,7 @@ class FileHandlerKicad:
         def fix_path(path_str: str) -> str:
             """ Repair special characters and normalize it. """
             return path_str.encode("unicode_escape").decode("utf-8")
-          
+        
+        @staticmethod
+        def fix_path_forward_slash(path_str: str) -> str:
+             return re.sub(r"\\+", "/", path_str)

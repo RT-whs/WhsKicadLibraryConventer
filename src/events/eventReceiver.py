@@ -1,10 +1,11 @@
 from blinker import Signal
 
+
 class EventReceiver:
     def __init__(self, signal: Signal, handler=None):
         self.signal = signal
-        self.custom_handler = handler or self.default_handler  
-        self.signal_id = self.signal.connect(self.custom_handler)  
+        self.custom_handler = handler or self.default_handler
+        self.signal_id = self.signal.connect(self.custom_handler)
 
     def default_handler(self, sender, **kwargs):
         print(f"EventReceiver: Received event from {sender} with data {kwargs}")
@@ -14,10 +15,6 @@ class EventReceiver:
         if self.signal and self.signal_id:
             self.signal.disconnect(self.signal_id)
             print("EventReceiver: Disconnected from signal.")
-
-
-
-
 
 
 # Odeslání signálu

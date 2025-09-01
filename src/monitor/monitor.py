@@ -4,6 +4,7 @@ import os
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from src.dataextractor.dataextractor import extract_data  # Importujeme extract_data správně z modulu dataextractor
+from src.util.json_util import ConfigSingleton
 
 # Načteme čas poslední změny pro každý soubor
 last_modified_time = {}
@@ -24,8 +25,8 @@ class FileChangeHandler(FileSystemEventHandler):
 
         file_path = event.src_path
         # Získání přípony
-        extension = os.path.splitext(file_path)[1]
-        if extension == ".kicad_sym":
+        file = os.path.basename(file_path)
+        if file == ConfigSingleton._instance.get("watched_sym_file"):
             print(f"File modified: {file_path}")
             handle_file_change(file_path)
         else:
@@ -56,12 +57,12 @@ def handle_file_change(file_path):
 # Funkce pro odpočet a následné zpracování souboru
 def start_countdown_and_process(file_path):
     """Provádí odpočet 2 sekund a následně zpracuje soubor."""
-    for i in range(2, 0, -1):
+    for i in range(5, 0, -1):
         print(f"Waiting {i} seconds before processing {file_path}...", end="\r")
         time.sleep(1)
 
     # Po odpočtu zpracujeme soubor
-    print(f"\nProcessing file after 2 seconds: {file_path}")
+    print(f"\nProcessing file after 5 seconds: {file_path}")
     process_file(file_path)
 
 # Funkce pro spuštění monitorování změn v adresáři
