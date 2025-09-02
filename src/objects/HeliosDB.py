@@ -74,8 +74,8 @@ class HeliosDB:
             #result = dict(zip(columns, row))
 
 
-            print(columns)  # Výstup: {'column1': value1, 'column2': value2, ...}
-            print(row)
+            #print(columns)  # Výstup: {'column1': value1, 'column2': value2, ...}
+            #print(row)
             cursor.close()
 
             return row 

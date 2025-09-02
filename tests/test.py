@@ -1,11 +1,17 @@
 #Main test
 import sys
 import os
-import re
-from pathlib import Path
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),  "..")))
+
+from src.objects.filehandler import FileHandlerKicad
 from src.objects.filehandler import FileHandlerKicad
 from src.objects.HeliosDB import HeliosDB
 from src.objects.TestDB import TestDB
+
+import re
+from pathlib import Path
+
 
 # add root project folder to sys.path
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -103,6 +109,8 @@ class TestData(unittest.TestCase):
         #self.dbTest.close()
 
     def test_copy_table(self):
+
+        print("*     Test_copy_table     *")
         self.db = HeliosDB()
         self.db.connect()
         self.dbTest = TestDB()
@@ -116,7 +124,7 @@ class TestData(unittest.TestCase):
         #self.dbTest.create_table('TabKmenZbozi', col_defs)
 
         #Save kmenova karta to new db
-        
+        print("*     Copy tab Kmen Zbozi    *")
 
         self.dbTest.close()
         self.db.close()
