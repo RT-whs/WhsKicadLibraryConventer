@@ -213,6 +213,11 @@ class TestData(unittest.TestCase):
         obj_test_symbol = kicad_symbol(symbol_collection[0])  
         self.dbTest.copy_last_record('TabKmenZbozi',maxregcis)
 
+        #Update record by symbol
+        symbol_collection = kicad_symbol.TextParsing.get_matching_key(self.text, "(symbol ")        
+        obj_test_symbol = kicad_symbol(symbol_collection[0])  
+        self.dbTest.update_record_by_kicad_symbol('TabKmenZbozi', number, obj_test_symbol)
+
 
         self.dbTest.close()
     

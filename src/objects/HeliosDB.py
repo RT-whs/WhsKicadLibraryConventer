@@ -1,6 +1,7 @@
 from src.util.json_util import ConfigSingleton
 import json
 from cryptography.fernet import Fernet
+from src.objects.symbol import kicad_symbol
 import pyodbc
 import os
 from abc import ABC, abstractmethod
@@ -82,27 +83,44 @@ class DataBaseConnector(ABC):
         return None
 
     
+    def update_record_by_kicad_symbol(self, tablename, RegCis, symbol:kicad_symbol):
+        sql = f"""
+            UPDATE {tablename}
+            SET Nazev1 = ?, Nazev2 = ?, Poznamka = ?, Nazev3 = ?, Nazev4 = Nazev 3, Aktualni_Dodavatel = ?, Vyrobce = ? 
+            WHERE RegCis = ? AND SkupZbo = 320;
+        """
+
+        nazev1 = symbol.propertiesFinal['ERP_Title1_czech']['value']
+        nazev2 = symbol.propertiesFinal['ERP_Title2_english']['value']
+        sym_val = symbol.propertiesFinal['Value']['value']
+        producer = symbol.propertiesFinal['ERP_Manufacturer_Name']['value']
+        akt_dod = symbol.propertiesFinal['ERP_Supplier_Name']['value']
+        poznamka = symbol.propertiesFinal['ERP_Summaries']['value'] + "\n" + symbol.propertiesFinal['ERP_link1']['value'] + "\n" + symbol.propertiesFinal['ERP_link2']['value']
+        res = self.send_query(sql, [nazev1, nazev2, poznamka, sym_val, akt_dod, vyrobce, RegCis])
+        return res
+        #SELECT TOP(10) RegCis,Nazev1,Nazev2,Nazev3,Nazev4 FROM TabKmenZbozi WHERE RegCis > 000072
+
     def copy_last_record(self, tablename, registrationnr):
-        # Očekávej schema-qualif. název, např. 'dbo.TabKmenZbozi'
         sql = f"""
         DECLARE @TableName sysname = N'{tablename}';
         DECLARE @SourceID INT;
         DECLARE @NewRegCis NVARCHAR(6);
         DECLARE @colsSelect NVARCHAR(MAX);
         DECLARE @SkupZbo INT;
-    
-        -- Najdi původní řádek podle RegCis a SkupZbo = 320
+
+        -- 1) Vyber poslední řádek podle RegCis a SkupZbo
         SELECT TOP 1 @SourceID = ID, @SkupZbo = SkupZbo
         FROM {tablename}
-        WHERE RegCis = ? AND SkupZbo = 320;
-    
+        WHERE RegCis = ? AND SkupZbo = 320
+        ORDER BY ID DESC;
+
         IF @SourceID IS NULL
         BEGIN
             RAISERROR('Záznam s RegCis = %s nebyl nalezen.', 16, 1);
             RETURN;
         END
-    
-        -- Dynamicky vyber všechny sloupce kromě identity, computed a RegCis
+
+        -- 2) Vyber všechny sloupce kromě identity a RegCis
         SELECT @colsSelect = STRING_AGG(QUOTENAME(name), ', ')
         FROM sys.columns
         WHERE object_id = OBJECT_ID(@TableName)
@@ -110,36 +128,28 @@ class DataBaseConnector(ABC):
           AND is_computed = 0
           AND system_type_id <> 189
           AND name <> 'RegCis';
-    
-        -- Spočítej nové RegCis unikátní v rámci stejného SkupZbo
-        SELECT @NewRegCis = RIGHT('000000' + CAST(MAX(CAST(RegCis AS INT)) + 1 AS VARCHAR(6)), 6)
+
+        -- 3) Spočítej nový RegCis (unikátní pro SkupZbo)
+        SELECT @NewRegCis = RIGHT('000000' + CAST(MAX(TRY_CAST(RegCis AS INT)) + 1 AS VARCHAR(6)), 6)
         FROM {tablename}
-        WHERE SkupZbo = @SkupZbo
-          AND ISNUMERIC(RegCis) = 1;
-    
-        -- Pokud náhodou vznikne duplicita, inkrementuj dokud je volné
-        WHILE EXISTS (SELECT 1 FROM {tablename} WHERE RegCis = @NewRegCis AND SkupZbo = @SkupZbo)
-        BEGIN
-            SELECT @NewRegCis = RIGHT('000000' + CAST(CAST(@NewRegCis AS INT) + 1 AS VARCHAR(6)), 6);
-        END
-    
-        -- Dynamický SQL: vlož hodnoty z původního řádku, RegCis nahradíme @NewRegCis
+        WHERE SkupZbo = @SkupZbo;
+
+        -- 4) Vlož pouze jeden řádek
         DECLARE @sql NVARCHAR(MAX) = '
         INSERT INTO ' + QUOTENAME(@TableName) + ' (RegCis, ' + @colsSelect + ')
         SELECT @NewRegCis, ' + @colsSelect + '
         FROM ' + QUOTENAME(@TableName) + '
         WHERE ID = @SourceID';
-    
-        -- Spusť dynamický SQL s parametry
+
         EXEC sp_executesql 
             @sql,
             N'@SourceID INT, @NewRegCis NVARCHAR(6)',
             @SourceID = @SourceID,
             @NewRegCis = @NewRegCis;
         """
-    
-        # Volání pyodbc s parametrem pro původní RegCis
+
         return self.send_query(sql, (registrationnr,))
+
 
         
         
