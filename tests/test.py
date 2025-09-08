@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),  "..")))
 
 from src.objects.filehandler import FileHandlerKicad
 from src.objects.filehandler import FileHandlerKicad
-from src.objects.HeliosDB import HeliosDB
+from src.objects.HeliosDB import DataBaseConnector
 from src.objects.TestDB import TestDB
 
 import re
@@ -37,9 +37,9 @@ class TestData(unittest.TestCase):
             temp_library_data = file.read()      
             self.text = temp_library_data
             
-
+    @unittest.skip("Testing only connection is not needed")
     def test_helios(self):
-        self.db = HeliosDB()
+        self.db = DataBaseConnector()
         self.assertTrue(self.db.connect() )
 
         ### Get index from helios        
@@ -53,12 +53,10 @@ class TestData(unittest.TestCase):
 
         result = self.db.send_query( r"SELECT * FROM TabKmenZbozi WHERE SkupZbo = 320 AND RegCis = ?", number )
         #zjistí že ID v této tabulce je autoincrement - potvrdí že je autoincrement id
-        result_row = self.db.send_query( r"SELECT name, is_identity FROM sys.columns WHERE object_id = OBJECT_ID('TabKmenZbozi')")
-
-        
+        result_row = self.db.send_query( r"SELECT name, is_identity FROM sys.columns WHERE object_id = OBJECT_ID('TabKmenZbozi')")         
         self.db.close()    
   
-
+    @unittest.skip("Skipped empty")
     def test_wsl_testDB(self):
         """ 
         WSL2
@@ -108,27 +106,116 @@ class TestData(unittest.TestCase):
         #self.assertTrue(self.dbTest.connect() )
         #self.dbTest.close()
 
+
+  
+    @unittest.skip("Skipped data already prepared")
     def test_copy_table(self):
+        
+        
+        def create_table_like(src_cursor, dst_cursor, table_name: str):
+            # 1. Zjistit definici sloupců ze zdrojové tabulky
+            src_cursor.execute(f"SELECT * FROM {table_name} WHERE 1=0")
+            cols = src_cursor.description
+
+            # 2. Mapování Python/ODBC typů -> SQL Server typy
+            type_map = {
+                int: "INT",
+                str: "NVARCHAR(MAX)",
+                float: "FLOAT",
+                bytes: "VARBINARY(MAX)",
+            }
+
+            col_defs = []
+            for col in cols:
+                name = col[0]
+                pytype = col[1]
+                sqltype = type_map.get(pytype, "NVARCHAR(MAX)")  # fallback
+                col_defs.append(f"[{name}] {sqltype}")
+
+            ddl = f"CREATE TABLE dbo.{table_name} ({', '.join(col_defs)})"
+
+            # 3. Dropnout tabulku pokud existuje
+            drop_sql = f"IF OBJECT_ID('dbo.{table_name}', 'U') IS NOT NULL DROP TABLE dbo.{table_name};"
+            dst_cursor.execute(drop_sql)
+
+            # 4. Vytvořit tabulku
+            dst_cursor.execute(ddl)
+            dst_cursor.connection.commit()
+            print(f"Tabulka dbo.{table_name} byla znovu vytvořena.")
+
+
+
 
         print("*     Test_copy_table     *")
-        self.db = HeliosDB()
-        self.db.connect()
+        self.db = DataBaseConnector()
+        ConnectedHelios, CursorHelios =  self.db.connect()
+        
         self.dbTest = TestDB()
-        self.dbTest.connect()
+        ConnectedTestDB, CursorTestDb, ConnectionTestDb = self.dbTest.connect()
         result = self.db.send_query( r"SELECT MAX(RegCis) AS MaxRegCis FROM TabKmenZbozi WHERE SkupZbo = 320")
         number = int(result[0])
         kmenova_karta = self.db.send_query( r"SELECT * FROM TabKmenZbozi WHERE SkupZbo = 320 AND RegCis = ?", number )
-        
+        print(kmenova_karta[0])
         #Copy table structure - uncoment when necessary
         #col_defs = self.db.get_table_defs('TabKmenZbozi')        
         #self.dbTest.create_table('TabKmenZbozi', col_defs)
 
+
+        if (True):
+            # Načti všechna data a názvy sloupců
+            #create_table_like(CursorHelios, CursorTestDb, "TabKmenZbozi")
+
+            CursorHelios.execute("SELECT * FROM TabKmenZbozi WHERE SkupZbo = 320")
+            rows = [tuple(r) for r in CursorHelios.fetchall()]
+            columns = [desc[0] for desc in CursorHelios.description]
+
+            # Připrav INSERT
+            placeholders = ", ".join(["?"] * len(columns))
+            columns_str = ", ".join(columns)
+            sql = f"INSERT INTO TabKmenZbozi ({columns_str}) VALUES ({placeholders})"
+
+            # Vlož data do cílové DB
+            CursorTestDb.executemany(sql, rows)
+            ConnectionTestDb.commit()
+
+            print(f"Zkopírováno {len(rows)} řádků.")
+
         #Save kmenova karta to new db
-        print("*     Copy tab Kmen Zbozi    *")
+        print("*     Copy tab Kmen Zbozi Finished    *")
+        #Copy table
+        
+
+
 
         self.dbTest.close()
         self.db.close()
 
+
+    def test_localDB(self):
+        self.dbTest = TestDB()
+        #Connection
+        ConnectedTestDB, CursorTestDb, ConnectionTestDb = self.dbTest.connect()
+        self.assertTrue(ConnectedTestDB)
+        result = self.dbTest.send_query(r"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'TabKmenZbozi';")
+        print (result)
+        #New item 
+            #Check if already exist
+                # When exist show the message
+        result = self.dbTest.send_query(r"SELECT MAX(RegCis) AS MaxRegCis FROM TabKmenZbozi WHERE SkupZbo = 320")
+        maxregcis = result[0][0]
+        print (maxregcis)
+        number = int(maxregcis)
+        number = number +1 
+        print(number)
+                
+                # When not exist create new item in db
+        symbol_collection = kicad_symbol.TextParsing.get_matching_key(self.text, "(symbol ")
+        obj_test_symbol = kicad_symbol(symbol_collection[0])  
+        self.dbTest.copy_last_record('TabKmenZbozi',maxregcis)
+
+
+        self.dbTest.close()
+    
 
 
     def test_loading_symbol(self):

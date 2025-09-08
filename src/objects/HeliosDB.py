@@ -3,25 +3,27 @@ import json
 from cryptography.fernet import Fernet
 import pyodbc
 import os
+from abc import ABC, abstractmethod
 
-
-class HeliosDB:
+class DataBaseConnector(ABC):
     _instance = None  # Statická proměnná pro uchování instance
 
     def __new__(cls):
         """Singleton pattern"""
         if cls._instance is None:
-            cls._instance = super(HeliosDB, cls).__new__(cls)            
+            cls._instance = super(DataBaseConnector, cls).__new__(cls)            
         return cls._instance
      
     def __init__(self):
-        self.config = ConfigSingleton()
-        self._app_login =  self.config.get('helios_app_login')
-        self._ip_address = self.config.get('helios_ip_address')
-        self._db_catalog = self.config.get('helios_db_catalog')
-        self._workstation = os.environ.get("COMPUTERNAME", "Unknown")
+
         self.connection = None
         self._connected = False
+
+    
+    @abstractmethod
+    def get_connection_info(self) -> dict:
+        """Child musí vrátit dict s údaji pro připojení"""
+        pass
 
     def get_password(self):
         # Tvůj šifrovací klíč (musí být stejný jako při šifrování)
@@ -59,29 +61,77 @@ class HeliosDB:
     def send_query(self, sql_query, values=None):
         try:
             cursor = self.connection.cursor()
-            if (values == None):
+            if values is None:
                 cursor.execute(sql_query)
             else:
-                cursor.execute(sql_query, values) 
-            #rows = cursor.fetchall()
+                cursor.execute(sql_query, values)
 
-            columns = [column[0] for column in cursor.description]
-
-            # Získání první řádky dat
-            row = cursor.fetchone()
-
-            # Sloučení názvů sloupců s daty
-            #result = dict(zip(columns, row))
-
-
-            #print(columns)  # Výstup: {'column1': value1, 'column2': value2, ...}
-            #print(row)
-            cursor.close()
-
-            return row 
+            # SELECT dotazy mají description, INSERT/UPDATE/DELETE ne
+            if cursor.description:
+                rows = cursor.fetchall()
+                cursor.close()
+                return rows
+            else:
+                self.connection.commit()
+                rc = cursor.rowcount
+                cursor.close()
+                return rc
 
         except Exception as e:
-            print("Error connection to database: ", e)
+            print("Database error:", e)
+        return None
+
+    
+    def copy_last_record(self, tablename, registrationnr):
+         # Očekávej schema-qualif. název, např. 'dbo.TabKmenZbozi'
+        sql = f"""
+        DECLARE @TableName sysname = N'{tablename}';
+        DECLARE @cols NVARCHAR(MAX);
+    
+        SELECT @cols = STRING_AGG(QUOTENAME(c.name), ', ')
+        FROM sys.columns AS c
+        WHERE c.object_id = OBJECT_ID(@TableName)
+          AND c.is_identity = 0         -- vynech identity
+          AND c.is_computed = 0         -- vynech computed columns
+          AND c.system_type_id <> 189;  -- vynech rowversion/timestamp
+    
+        IF @cols IS NULL
+        BEGIN
+            RAISERROR('Nenalezeny vhodné sloupce pro insert.', 16, 1);
+            RETURN;
+        END
+    
+        DECLARE @sql NVARCHAR(MAX) = '
+        INSERT INTO ' + QUOTENAME(@TableName) + ' (' + @cols + ')
+        SELECT ' + @cols + '
+        FROM ' + QUOTENAME(@TableName) + '
+        WHERE ID = (
+            SELECT MAX(ID)
+            FROM ' + QUOTENAME(@TableName) + '
+            WHERE SkupZbo = 320 AND RegCis = @RegCis
+        )';
+    
+        EXEC sp_executesql @sql, N'@RegCis NVARCHAR(50)', @RegCis = ?;
+        """
+    
+        # Pokud používáš univerzální send_query (Varianta B):
+        return self.send_query(sql, (registrationnr,))
+        # Pokud máš separátní exec_nonquery (Varianta A):
+        # return self.exec_nonquery(sql, (registrationnr,))
+        
+        
+        
+
+        
+        
+       
+          
+        
+        
+        
+        
+        
+        
 
 
     def get_table_defs(self, table_name):
@@ -121,27 +171,42 @@ class HeliosDB:
 
             
         
-    def connect(self):
+    def connect(self) ->  tuple[bool, pyodbc.Cursor]:
+        info = self.get_connection_info()
         connection_string = (
-            f'DRIVER={{SQL Server}};'
-            f'SERVER={self._ip_address}\\SQLHELIOS;'
-            f'DATABASE={self._db_catalog};'
-            f'UID={self._app_login};'
-            f'PWD={self.get_password()};'
-            f'Workstation ID={self._workstation};'
+            f"DRIVER={{SQL Server}};"
+            f"SERVER={info['ip']};"
+            f"DATABASE={info['db']};"
+            f"UID={info['login']};"
+            f"PWD={info['password']};"
+            f"Workstation ID={info['workstation']};"
         )
         try:
             self.connection = pyodbc.connect(connection_string)
             self._connected = True
             print(f"Connected\n")
-            return True
+            return True, self.connection.cursor(), self.connection
         
         except Exception as ex:
             print(f"Function Helios::Connect error: {ex}")
             if self.connection:
                 self.connection.close()
-            return False
-        
+            return False, None, None
+      
+class HeliosDB(DataBaseConnector):
+    def get_connection_info(self):
+        config = ConfigSingleton()
+        return {
+            "login": config.get("helios_app_login"),
+            "ip": config.get("helios_ip_address"),
+            "db": config.get("helios_db_catalog"),
+            "password": config.get("helios_password"),
+            "workstation": os.environ.get("COMPUTERNAME", "Unknown")
+        }
+    
+
+#    def copyTable(self):
+         
 
 """
 ('TabPravaObecPrehled',)
