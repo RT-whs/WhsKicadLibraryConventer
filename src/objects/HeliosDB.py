@@ -83,41 +83,64 @@ class DataBaseConnector(ABC):
 
     
     def copy_last_record(self, tablename, registrationnr):
-         # Očekávej schema-qualif. název, např. 'dbo.TabKmenZbozi'
+        # Očekávej schema-qualif. název, např. 'dbo.TabKmenZbozi'
         sql = f"""
         DECLARE @TableName sysname = N'{tablename}';
-        DECLARE @cols NVARCHAR(MAX);
+        DECLARE @SourceID INT;
+        DECLARE @NewRegCis NVARCHAR(6);
+        DECLARE @colsSelect NVARCHAR(MAX);
+        DECLARE @SkupZbo INT;
     
-        SELECT @cols = STRING_AGG(QUOTENAME(c.name), ', ')
-        FROM sys.columns AS c
-        WHERE c.object_id = OBJECT_ID(@TableName)
-          AND c.is_identity = 0         -- vynech identity
-          AND c.is_computed = 0         -- vynech computed columns
-          AND c.system_type_id <> 189;  -- vynech rowversion/timestamp
+        -- Najdi původní řádek podle RegCis a SkupZbo = 320
+        SELECT TOP 1 @SourceID = ID, @SkupZbo = SkupZbo
+        FROM {tablename}
+        WHERE RegCis = ? AND SkupZbo = 320;
     
-        IF @cols IS NULL
+        IF @SourceID IS NULL
         BEGIN
-            RAISERROR('Nenalezeny vhodné sloupce pro insert.', 16, 1);
+            RAISERROR('Záznam s RegCis = %s nebyl nalezen.', 16, 1);
             RETURN;
         END
     
-        DECLARE @sql NVARCHAR(MAX) = '
-        INSERT INTO ' + QUOTENAME(@TableName) + ' (' + @cols + ')
-        SELECT ' + @cols + '
-        FROM ' + QUOTENAME(@TableName) + '
-        WHERE ID = (
-            SELECT MAX(ID)
-            FROM ' + QUOTENAME(@TableName) + '
-            WHERE SkupZbo = 320 AND RegCis = @RegCis
-        )';
+        -- Dynamicky vyber všechny sloupce kromě identity, computed a RegCis
+        SELECT @colsSelect = STRING_AGG(QUOTENAME(name), ', ')
+        FROM sys.columns
+        WHERE object_id = OBJECT_ID(@TableName)
+          AND is_identity = 0
+          AND is_computed = 0
+          AND system_type_id <> 189
+          AND name <> 'RegCis';
     
-        EXEC sp_executesql @sql, N'@RegCis NVARCHAR(50)', @RegCis = ?;
+        -- Spočítej nové RegCis unikátní v rámci stejného SkupZbo
+        SELECT @NewRegCis = RIGHT('000000' + CAST(MAX(CAST(RegCis AS INT)) + 1 AS VARCHAR(6)), 6)
+        FROM {tablename}
+        WHERE SkupZbo = @SkupZbo
+          AND ISNUMERIC(RegCis) = 1;
+    
+        -- Pokud náhodou vznikne duplicita, inkrementuj dokud je volné
+        WHILE EXISTS (SELECT 1 FROM {tablename} WHERE RegCis = @NewRegCis AND SkupZbo = @SkupZbo)
+        BEGIN
+            SELECT @NewRegCis = RIGHT('000000' + CAST(CAST(@NewRegCis AS INT) + 1 AS VARCHAR(6)), 6);
+        END
+    
+        -- Dynamický SQL: vlož hodnoty z původního řádku, RegCis nahradíme @NewRegCis
+        DECLARE @sql NVARCHAR(MAX) = '
+        INSERT INTO ' + QUOTENAME(@TableName) + ' (RegCis, ' + @colsSelect + ')
+        SELECT @NewRegCis, ' + @colsSelect + '
+        FROM ' + QUOTENAME(@TableName) + '
+        WHERE ID = @SourceID';
+    
+        -- Spusť dynamický SQL s parametry
+        EXEC sp_executesql 
+            @sql,
+            N'@SourceID INT, @NewRegCis NVARCHAR(6)',
+            @SourceID = @SourceID,
+            @NewRegCis = @NewRegCis;
         """
     
-        # Pokud používáš univerzální send_query (Varianta B):
+        # Volání pyodbc s parametrem pro původní RegCis
         return self.send_query(sql, (registrationnr,))
-        # Pokud máš separátní exec_nonquery (Varianta A):
-        # return self.exec_nonquery(sql, (registrationnr,))
+
         
         
         
