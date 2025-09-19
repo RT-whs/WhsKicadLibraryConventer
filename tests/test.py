@@ -6,7 +6,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__),  "..")))
 
 from src.objects.filehandler import FileHandlerKicad
 from src.objects.filehandler import FileHandlerKicad
-from src.objects.HeliosDB import DataBaseConnector
+from src.objects.HeliosDB import HeliosDB
 from src.objects.TestDB import TestDB
 
 import re
@@ -37,9 +37,9 @@ class TestData(unittest.TestCase):
             temp_library_data = file.read()      
             self.text = temp_library_data
             
-    @unittest.skip("Testing only connection is not needed")
+   
     def test_helios(self):
-        self.db = DataBaseConnector()
+        self.db = HeliosDB()
         self.assertTrue(self.db.connect() )
 
         ### Get index from helios        

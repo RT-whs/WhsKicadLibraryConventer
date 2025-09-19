@@ -6,6 +6,7 @@ from src.objects.symbol import kicad_symbol
 from blinker import Signal
 from src.events.eventReceiver import EventReceiver
 from src.objects.filehandler import FileHandlerKicad
+from src.objects.HeliosDB import HeliosDB
 
 
 def show_in_gui(symbol_object: kicad_symbol):
@@ -102,8 +103,11 @@ def show_in_gui(symbol_object: kicad_symbol):
             return
         
         #save to kicad.sym
-        buttonSignal_SaveSymbol.send("ButtonSaveSymbol", action="clicked")
+        buttonSignal_SaveSymbol.send("ButtonSaveSymbol", action="clicked", symbol=symbol_object)
         print("Saved")
+
+        
+
         #close this window
         root.destroy()
     
@@ -227,7 +231,20 @@ def show_in_gui(symbol_object: kicad_symbol):
 
     # Add button for save
     buttonSignal_SaveSymbol = Signal()
-    symbol_object.registerEventReceiverSaveCmd(buttonSignal_SaveSymbol)
+    # Add connection to db
+    databaseAccess = HeliosDB()
+    databaseAccess.registerEventReceiverSaveCmd(buttonSignal_SaveSymbol)
+    
+    
+    databaseItemCreated = Signal() 
+    databaseAccess.set_signal_DbSaveFinished(databaseItemCreated)   #from signal databaseItemCreated
+    symbol_object.registerEventReceiverSaveCmd(databaseItemCreated) #to reciever databaseItemCreated
+    
+    
+    
+
+
+    
     save_button = tk.Button(root, text="Save Changes", command=save_changes)
     save_button.grid(row=2,column=1,pady=10,sticky='w' )
 

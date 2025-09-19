@@ -1,10 +1,12 @@
 from src.util.json_util import ConfigSingleton
 import json
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet,InvalidToken
 from src.objects.symbol import kicad_symbol
 import pyodbc
 import os
 from abc import ABC, abstractmethod
+from src.events.eventReceiver import EventReceiver
+from blinker import Signal
 
 class DataBaseConnector(ABC):
     _instance = None  # Statická proměnná pro uchování instance
@@ -20,7 +22,40 @@ class DataBaseConnector(ABC):
         self.connection = None
         self._connected = False
 
-    
+    def saveCmd(self, sender, **kwargs):
+
+        obj_symbol: kicad_symbol = kwargs.get("symbol") # Kicad symbol sended by event
+        
+        print("Save symbol ERP data to database")
+        ConnectedDB, CursorTestDb, ConnectionTestDb = self.connect()
+        if (not ConnectedDB):
+            print("Cannot connect to remote db")
+            return 
+        
+        result = self.send_query(r"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'TabKmenZbozi';")
+        
+        
+        result = self.send_query(r"SELECT MAX(RegCis) AS MaxRegCis FROM TabKmenZbozi WHERE SkupZbo = 320")
+        maxregcis = result[0][0]
+        print (maxregcis)
+        number = int(maxregcis)
+        number = number +1 
+        print(number)
+                
+        # create new item in db         
+        self.copy_last_record('TabKmenZbozi',maxregcis)
+
+        #Update record by symbol        
+        self.update_record_by_kicad_symbol('TabKmenZbozi', number, obj_symbol)
+
+        # Close db connection
+        self.close()  
+
+        # Update symbol
+        obj_symbol.propertiesFinal['ERP']['value'] = "320/" + f"{number:06}"
+        self.item_DbSaveFinished.send(self, symbol=obj_symbol)
+
+
     @abstractmethod
     def get_connection_info(self) -> dict:
         """Child musí vrátit dict s údaji pro připojení"""
@@ -86,17 +121,19 @@ class DataBaseConnector(ABC):
     def update_record_by_kicad_symbol(self, tablename, RegCis, symbol:kicad_symbol):
         sql = f"""
             UPDATE {tablename}
-            SET Nazev1 = ?, Nazev2 = ?, Poznamka = ?, Nazev3 = ?, Nazev4 = Nazev 3, Aktualni_Dodavatel = ?, Vyrobce = ? 
-            WHERE RegCis = ? AND SkupZbo = 320;
+            SET Nazev1 = ?, Nazev2 = ?, Poznamka = ?, Nazev3 = ?, Nazev4 = ?, Aktualni_Dodavatel = ?, Vyrobce = ? 
+            WHERE RegCis = ? AND SkupZbo = 320
         """
 
         nazev1 = symbol.propertiesFinal['ERP_Title1_czech']['value']
         nazev2 = symbol.propertiesFinal['ERP_Title2_english']['value']
         sym_val = symbol.propertiesFinal['Value']['value']
-        producer = symbol.propertiesFinal['ERP_Manufacturer_Name']['value']
-        akt_dod = symbol.propertiesFinal['ERP_Supplier_Name']['value']
+        #producer = symbol.propertiesFinal['ERP_Manufacturer_Name']['value']
+        #akt_dod = symbol.propertiesFinal['ERP_Supplier_Name']['value']
+        producer = None
+        akt_dod = None
         poznamka = symbol.propertiesFinal['ERP_Summaries']['value'] + "\n" + symbol.propertiesFinal['ERP_link1']['value'] + "\n" + symbol.propertiesFinal['ERP_link2']['value']
-        res = self.send_query(sql, [nazev1, nazev2, poznamka, sym_val, akt_dod, vyrobce, RegCis])
+        res = self.send_query(sql, [nazev1, nazev2, poznamka, sym_val,sym_val, akt_dod, producer, RegCis])
         return res
         #SELECT TOP(10) RegCis,Nazev1,Nazev2,Nazev3,Nazev4 FROM TabKmenZbozi WHERE RegCis > 000072
 
@@ -155,7 +192,36 @@ class DataBaseConnector(ABC):
         
         
 
-        
+    def _maybe_decrypt(self, token: str) -> str:
+        """
+        Pokud je token Fernet token (např. 'gAAAAAB...'), pokusí se jej rozšifrovat.
+        Jinak vrátí token nezměněný.
+        """
+        if not token:
+            return token
+
+        # jednoduchá heuristika: fernet tokeny většinou začínají 'gAAAA'
+        if not isinstance(token, str) or not token.startswith("gAAAA"):
+            return token
+
+        # získej key buď z konfigurace nebo z environment proměnné
+        # *Uprav podle toho, kde máš uložený klíč*:
+        key = "AGFVbAy4SscjhPC1Eboj_D0YCBHte4K7mn2BXVlsC-4="  # doporučené
+        # nebo např. key = ConfigSingleton().get("helios_fernet_key")
+
+        if not key:
+            # pokud nemáme klíč, raději vrať token (nepokusíme se dešifrovat)
+            # nebo případně vyhoď chybu podle potřeby
+            return token
+
+        try:
+            f = Fernet(key.encode() if isinstance(key, str) else key)
+            decrypted = f.decrypt(token.encode())
+            return decrypted.decode('utf-8')
+        except (InvalidToken, ValueError) as e:
+            # není to platný Fernet token nebo špatný klíč -> vrátíme originál
+            # případně zde můžeš logovat warning
+            return token   
         
        
           
@@ -225,18 +291,28 @@ class DataBaseConnector(ABC):
             if self.connection:
                 self.connection.close()
             return False, None, None
+        
+    def registerEventReceiverSaveCmd(self, signal_save):
+        self.receiverSave = EventReceiver(signal_save, self.saveCmd)
+
+    def set_signal_DbSaveFinished(self, signal: Signal):
+        self.item_DbSaveFinished = signal
       
 class HeliosDB(DataBaseConnector):
     def get_connection_info(self):
         config = ConfigSingleton()
+        raw_password = config.get("helios_app_password")
+
+        password = self._maybe_decrypt(raw_password)
         return {
             "login": config.get("helios_app_login"),
             "ip": config.get("helios_ip_address"),
             "db": config.get("helios_db_catalog"),
-            "password": config.get("helios_password"),
+            "password": password,
             "workstation": os.environ.get("COMPUTERNAME", "Unknown")
         }
     
+    #def get_
 
 #    def copyTable(self):
          

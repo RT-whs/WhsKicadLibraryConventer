@@ -5,8 +5,8 @@
     "library_root_folder": "C:\\WHS_Kicad_Libraries",
     "library_final_folder": "C:\\WHS_Kicad_Libraries\\parts",
     "library_final_folder_path_symbol_name" : "${WHS_MAIN_LIB}",
-    "symbol_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\9.0\\sym-lib-table",
-    "footprint_lib_file": "C:\\Users\\rt\\AppData\\Roaming\\kicad\\9.0\\fp-lib-table",
+    "symbol_lib_file": "C:\\Users\\rt.JAG\\AppData\\Roaming\\kicad\\9.0\\sym-lib-table",
+    "footprint_lib_file": "C:\\Users\\rt.JAG\\AppData\\Roaming\\kicad\\9.0\\fp-lib-table",
 
     "helios_app_login" : "",
     "helios_app_password" : "",
