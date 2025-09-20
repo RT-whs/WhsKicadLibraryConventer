@@ -32,28 +32,35 @@ class DataBaseConnector(ABC):
             print("Cannot connect to remote db")
             return 
         
-        result = self.send_query(r"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'TabKmenZbozi';")
+        #result = self.send_query(r"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'TabKmenZbozi';")
         
         
-        result = self.send_query(r"SELECT MAX(RegCis) AS MaxRegCis FROM TabKmenZbozi WHERE SkupZbo = 320")
-        maxregcis = result[0][0]
-        print (maxregcis)
-        number = int(maxregcis)
-        number = number +1 
-        print(number)
+        #result = self.send_query(r"SELECT MAX(RegCis) AS MaxRegCis FROM TabKmenZbozi WHERE SkupZbo = 320")
+        #maxregcis = result[0][0]
+        #print (maxregcis)
+        #number = int(maxregcis)
+        #number = number +1 
+        #print(number)
                 
         # create new item in db         
-        self.copy_last_record('TabKmenZbozi',maxregcis)
+        #self.copy_last_record('TabKmenZbozi',maxregcis)
 
 
         #Update record by symbol        
-        self.update_record_by_kicad_symbol('TabKmenZbozi', number, obj_symbol)
+        erpToUpdate = obj_symbol.propertiesFinal['ERP']['value'] #return 320/0000xx
+        erpRegCis = erpToUpdate.split("/")[1]
+        if (erpRegCis) == 0:
+           raise ValueError(f"ERP Registrační číslo nesmí být 0")
+        if len(erpRegCis) != 6:
+           raise ValueError(f"ERP RegCis musí mít 6 znaků, ale má {len(erpRegCis)}: {erpRegCis}")
+    
+        self.update_record_by_kicad_symbol('TabKmenZbozi', erpRegCis , obj_symbol)
 
         # Close db connection
         self.close()  
 
         # Update symbol
-        obj_symbol.propertiesFinal['ERP']['value'] = "320/" + f"{number:06}"
+        #obj_symbol.propertiesFinal['ERP']['value'] = "320/" + f"{number:06}"
         self.item_DbSaveFinished.send(self, symbol=obj_symbol)
 
 
