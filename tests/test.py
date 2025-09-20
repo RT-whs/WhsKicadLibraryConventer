@@ -37,7 +37,7 @@ class TestData(unittest.TestCase):
             temp_library_data = file.read()      
             self.text = temp_library_data
             
-   
+    @unittest.skip("Not call on the production DB")
     def test_helios(self):
         self.db = HeliosDB()
         self.assertTrue(self.db.connect() )
@@ -55,6 +55,10 @@ class TestData(unittest.TestCase):
         #zjistí že ID v této tabulce je autoincrement - potvrdí že je autoincrement id
         result_row = self.db.send_query( r"SELECT name, is_identity FROM sys.columns WHERE object_id = OBJECT_ID('TabKmenZbozi')")         
         self.db.close()    
+
+    
+
+        
   
     @unittest.skip("Skipped empty")
     def test_wsl_testDB(self):
@@ -147,7 +151,7 @@ class TestData(unittest.TestCase):
 
 
         print("*     Test_copy_table     *")
-        self.db = DataBaseConnector()
+        self.db = HeliosDB()
         ConnectedHelios, CursorHelios =  self.db.connect()
         
         self.dbTest = TestDB()

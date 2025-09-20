@@ -7,3 +7,4 @@ regex
 blinker
 pyodbc
 cryptography
+pywin32

@@ -45,6 +45,7 @@ class DataBaseConnector(ABC):
         # create new item in db         
         self.copy_last_record('TabKmenZbozi',maxregcis)
 
+
         #Update record by symbol        
         self.update_record_by_kicad_symbol('TabKmenZbozi', number, obj_symbol)
 
@@ -144,40 +145,40 @@ class DataBaseConnector(ABC):
         DECLARE @NewRegCis NVARCHAR(6);
         DECLARE @colsSelect NVARCHAR(MAX);
         DECLARE @SkupZbo INT;
-
+        
         -- 1) Vyber poslední řádek podle RegCis a SkupZbo
         SELECT TOP 1 @SourceID = ID, @SkupZbo = SkupZbo
         FROM {tablename}
         WHERE RegCis = ? AND SkupZbo = 320
         ORDER BY ID DESC;
-
+        
         IF @SourceID IS NULL
         BEGIN
             RAISERROR('Záznam s RegCis = %s nebyl nalezen.', 16, 1);
             RETURN;
         END
-
-        -- 2) Vyber všechny sloupce kromě identity a RegCis
+        
+        -- 2) Vyber všechny sloupce kromě identity, RegCis a AVAReferenceID, RowGUID
         SELECT @colsSelect = STRING_AGG(QUOTENAME(name), ', ')
         FROM sys.columns
         WHERE object_id = OBJECT_ID(@TableName)
           AND is_identity = 0
           AND is_computed = 0
           AND system_type_id <> 189
-          AND name <> 'RegCis';
-
+          AND name NOT IN ('RegCis','AVAReferenceID','RowGUID');
+        
         -- 3) Spočítej nový RegCis (unikátní pro SkupZbo)
         SELECT @NewRegCis = RIGHT('000000' + CAST(MAX(TRY_CAST(RegCis AS INT)) + 1 AS VARCHAR(6)), 6)
         FROM {tablename}
         WHERE SkupZbo = @SkupZbo;
-
+        
         -- 4) Vlož pouze jeden řádek
         DECLARE @sql NVARCHAR(MAX) = '
         INSERT INTO ' + QUOTENAME(@TableName) + ' (RegCis, ' + @colsSelect + ')
         SELECT @NewRegCis, ' + @colsSelect + '
         FROM ' + QUOTENAME(@TableName) + '
         WHERE ID = @SourceID';
-
+        
         EXEC sp_executesql 
             @sql,
             N'@SourceID INT, @NewRegCis NVARCHAR(6)',
@@ -188,7 +189,7 @@ class DataBaseConnector(ABC):
         return self.send_query(sql, (registrationnr,))
 
 
-        
+    #CAST(NEWID() AS nvarchar(80)), CAST(NEWID() AS nvarchar(80)),    
         
         
 
